@@ -1,4 +1,5 @@
 import { cp, readFile, readdir, writeFile } from 'node:fs/promises'
+
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -41,8 +42,7 @@ const ${variableName} = \`${remoteUrl}\``
 }
 
 let newContent = content
-newContent = replaceWorkerUrl(newContent, 'chatViewWorkerUrl', 'chat-view', 'chatViewWorkerMain.js', chatViewWorkerPath)
-newContent = replaceWorkerUrl(newContent, 'chatToolWorkerUrl', 'auth-worker', 'authWorkerMain.js', chatToolWorkerPath)
+newContent = replaceWorkerUrl(newContent, 'authWorkerUrl', 'auth-worker', 'authWorkerMain.js', chatToolWorkerPath)
 
 if (newContent !== content) {
   await cp(rendererWorkerMainPath, rendererWorkerMainPath + '.original')
