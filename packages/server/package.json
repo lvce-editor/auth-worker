@@ -1,5 +1,5 @@
 {
-  "name": "@lvce-editor/chat-view-server",
+  "name": "@lvce-editor/auth-worker-server",
   "version": "0.0.0-dev",
   "main": "index.js",
   "type": "module",
