@@ -1,5 +1,5 @@
 import type { BackendAuthState } from '../BackendAuthState/BackendAuthState.ts'
-import { delay } from '../../Delay/Delay.ts'
+import { delay } from '../Delay/Delay.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 import { syncBackendAuth } from '../SyncBackendAuth/SyncBackendAuth.ts'
 
