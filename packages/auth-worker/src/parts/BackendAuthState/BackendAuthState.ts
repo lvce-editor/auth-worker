@@ -1,4 +1,4 @@
-import type { AuthUserState } from '../../AuthUserState/AuthUserState.ts'
+import type { AuthUserState } from '../AuthUserState/AuthUserState.ts'
 
 export interface BackendAuthState {
   readonly authAccessToken: string
