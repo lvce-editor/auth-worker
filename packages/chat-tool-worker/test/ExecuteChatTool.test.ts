@@ -183,7 +183,7 @@ test('executeChatTool dispatches grep_search tool', async () => {
     'grep_search',
     JSON.stringify({
       includeIgnoredFiles: false,
-      includePattern: 'packages/chat-tool-worker/src/**/*.ts',
+      includePattern: 'packages/auth-worker/src/**/*.ts',
       isRegexp: false,
       query: 'search text',
     }),
@@ -206,7 +206,7 @@ test('executeChatTool dispatches grep_search tool', async () => {
           '1',
           '--ignore-case',
           '--glob',
-          'packages/chat-tool-worker/src/**/*.ts',
+          'packages/auth-worker/src/**/*.ts',
           '--fixed-strings',
           '--',
           'search text',
@@ -219,7 +219,7 @@ test('executeChatTool dispatches grep_search tool', async () => {
   expect(result).toEqual({
     arguments: {
       includeIgnoredFiles: false,
-      includePattern: 'packages/chat-tool-worker/src/**/*.ts',
+      includePattern: 'packages/auth-worker/src/**/*.ts',
       isRegexp: false,
       query: 'search text',
     },

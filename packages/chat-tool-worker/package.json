@@ -1,10 +1,10 @@
 {
-  "name": "@lvce-editor/chat-tool-worker",
+  "name": "@lvce-editor/auth-worker",
   "version": "0.0.0-dev",
   "description": "Chat Tool Worker",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lvce-editor/chat-tool-worker.git"
+    "url": "git+https://github.com/lvce-editor/auth-worker.git"
   },
   "license": "MIT",
   "author": "Lvce Editor",

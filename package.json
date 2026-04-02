@@ -1,5 +1,5 @@
 {
-  "name": "@lvce-editor/chat-tool-worker-monorepo",
+  "name": "@lvce-editor/auth-worker-monorepo",
   "version": "0.0.0-dev",
   "license": "MIT",
   "type": "module",

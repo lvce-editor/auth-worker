@@ -5,9 +5,9 @@ import { bundleDebugViewJs } from './bundleJs.ts'
 import { root } from './root.ts'
 
 const dist = join(root, '.tmp', 'dist')
-const debugViewDist = join(root, '.tmp', 'dist-chat-tool-worker')
-const networkWorkerDist = join(root, '.tmp', 'dist-chat-tool-worker')
-const toolWorkerDist = join(root, '.tmp', 'dist-chat-tool-worker')
+const debugViewDist = join(root, '.tmp', 'dist-auth-worker')
+const networkWorkerDist = join(root, '.tmp', 'dist-auth-worker')
+const toolWorkerDist = join(root, '.tmp', 'dist-auth-worker')
 
 const readJson = async (path) => {
   const content = await readFile(path, 'utf8')
@@ -68,7 +68,7 @@ const version = await getVersion()
 await cp(join(root, 'README.md'), join(dist, 'README.md'))
 await cp(join(root, 'LICENSE'), join(dist, 'LICENSE'))
 
-const debugViewPackageJson = await readJson(join(root, 'packages', 'chat-tool-worker', 'package.json'))
+const debugViewPackageJson = await readJson(join(root, 'packages', 'auth-worker', 'package.json'))
 
 delete debugViewPackageJson.scripts
 delete debugViewPackageJson.dependencies

@@ -1,11 +1,11 @@
 import type { ExecuteToolOptions, ToolResponse } from '../Types/Types.ts'
 import { getToolErrorPayload } from '../GetToolErrorPayload/GetToolErrorPayload.ts'
 
-const todoDbName = 'chat-tool-worker'
+const todoDbName = 'auth-worker'
 const todoStoreName = 'state'
 const todoKey = 'todoList'
-const todoCacheName = 'chat-tool-worker-todo'
-const todoCacheRequest = new Request('https://chat-tool-worker.local/todo-list')
+const todoCacheName = 'auth-worker-todo'
+const todoCacheRequest = new Request('https://auth-worker.local/todo-list')
 
 let memoryTodoList = ''
 
