@@ -1,8 +1,6 @@
 import { OpenerWorker, RendererWorker } from '@lvce-editor/rpc-registry'
-import type { ChatState } from '../ChatState/ChatState.ts'
 import { getBackendLoginUrl, getLoggedOutBackendAuthState, waitForBackendLogin } from '../BackendAuth/BackendAuth.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
-import { set } from '../StatusBarStates/StatusBarStates.ts'
 
 interface LoginResponse {
   readonly accessToken?: string
@@ -19,7 +17,7 @@ const isLoginResponse = (value: unknown): value is LoginResponse => {
   return true
 }
 
-const getLoggedInState = (state: ChatState, response: LoginResponse): ChatState => {
+const getLoggedInState = (state: any, response: LoginResponse): any => {
   const accessToken = typeof response.accessToken === 'string' ? response.accessToken : ''
   return {
     ...state,
@@ -32,7 +30,7 @@ const getLoggedInState = (state: ChatState, response: LoginResponse): ChatState 
   }
 }
 
-export const handleClickLogin = async (state: ChatState): Promise<ChatState> => {
+export const handleClickLogin = async (state: any): Promise<any> => {
   if (!state.backendUrl) {
     return {
       ...state,
@@ -40,14 +38,10 @@ export const handleClickLogin = async (state: ChatState): Promise<ChatState> => 
       userState: 'loggedOut',
     }
   }
-  const signingInState: ChatState = {
+  const signingInState: any = {
     ...state,
     authErrorMessage: '',
     userState: 'loggingIn',
-  }
-  if (state.uid) {
-    set(state.uid, state, signingInState)
-    await RendererWorker.invoke('Chat.rerender')
   }
   try {
     if (MockBackendAuth.hasPendingMockLoginResponse()) {
