@@ -1,4 +1,4 @@
-import { OpenerWorker, RendererWorker } from '@lvce-editor/rpc-registry'
+import { OpenerWorker } from '@lvce-editor/rpc-registry'
 import { getBackendLoginUrl, getLoggedOutBackendAuthState, waitForBackendLogin } from '../BackendAuth/BackendAuth.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
 
