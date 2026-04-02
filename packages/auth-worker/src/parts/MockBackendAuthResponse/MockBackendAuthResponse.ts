@@ -1,4 +1,3 @@
-import type { ChatState } from '../ChatState/ChatState.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
 
 interface MockBackendAuthResponsePayload {
@@ -24,7 +23,7 @@ const getDelay = (payload: unknown): number => {
   return typeof delay === 'number' && delay > 0 ? delay : 0
 }
 
-export const mockBackendAuthResponse = (state: ChatState, payload: MockBackendAuthResponsePayload): ChatState => {
+export const mockBackendAuthResponse = (state: any, payload: MockBackendAuthResponsePayload): any => {
   const delay = getDelay(payload)
   if (payload.type === 'error') {
     MockBackendAuth.setNextLoginResponse({
