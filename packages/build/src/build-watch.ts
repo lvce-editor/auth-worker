@@ -9,9 +9,9 @@ const commonArgs = ['--format=esm', '--bundle', '--platform=node', '--watch']
 
 const tasks = [
   {
-    input: 'packages/auth-worker/src/chatauthWorkerMain.ts',
+    input: 'packages/auth-worker/src/authWorkerMain.ts',
     outputDir: '.tmp/dist-auth-worker/dist',
-    outputFile: '.tmp/dist-auth-worker/dist/chatauthWorkerMain.js',
+    outputFile: '.tmp/dist-auth-worker/dist/authWorkerMain.js',
     external: ['electron', 'ws'],
   },
 ]

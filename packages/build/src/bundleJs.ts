@@ -41,10 +41,9 @@ const bundle = async (options: RollupOptions) => {
 }
 
 export const bundleDebugViewJs = async () => {
-  const options = getOptions(
-    join(root, 'packages/auth-worker/src/chatauthWorkerMain.ts'),
-    join(root, '.tmp/dist-auth-worker/dist/chatauthWorkerMain.js'),
-    ['ws', 'electron'],
-  )
+  const options = getOptions(join(root, 'packages/auth-worker/src/authWorkerMain.ts'), join(root, '.tmp/dist-auth-worker/dist/authWorkerMain.js'), [
+    'ws',
+    'electron',
+  ])
   await bundle(options)
 }
