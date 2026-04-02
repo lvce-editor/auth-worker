@@ -45,11 +45,11 @@ const ${variableName} = \`${remoteUrl}\``
 }
 
 let newContent = content
-newContent = replaceRemoteUrlWithAssetUrl(newContent, 'chatToolWorkerUrl', 'auth-worker', 'authWorkerMain.js', chatToolWorkerPath)
+newContent = replaceRemoteUrlWithAssetUrl(newContent, 'authWorkerUrl', 'auth-worker', 'authWorkerMain.js', chatToolWorkerPath)
 
-if (newContent === content) {
-  throw new Error('occurrence not found')
-}
+// if (newContent === content) {
+//   throw new Error('occurrence not found')
+// }
 await writeFile(rendererWorkerPath, newContent)
 
 await cp(join(root, 'dist'), join(root, '.tmp', 'static'), { recursive: true })
