@@ -1,3 +1,3 @@
-# Chat Tool Worker
+# Auth Worker
 
-WebWorker for the Chat Tool functionality in Lvce Editor.
+WebWorker for the Auth functionality in Lvce Editor.
