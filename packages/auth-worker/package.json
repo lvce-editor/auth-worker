@@ -1,0 +1,53 @@
+{
+  "name": "@lvce-editor/auth-worker",
+  "version": "0.0.0-dev",
+  "description": "Auth Worker",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lvce-editor/auth-worker.git"
+  },
+  "license": "MIT",
+  "author": "Lvce Editor",
+  "type": "module",
+  "main": "src/authWorkerMain.ts",
+  "scripts": {
+    "test": "node --unhandled-rejections=warn --experimental-vm-modules ./node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
+    "test:watch": "node --unhandled-rejections=warn --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch"
+  },
+  "jest": {
+    "injectGlobals": false,
+    "extensionsToTreatAsEsm": [
+      ".ts"
+    ],
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "transform": {
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "useESM": true
+        }
+      ]
+    },
+    "testMatch": [
+      "**/test/**"
+    ],
+    "collectCoverage": true,
+    "coverageThreshold": {
+      "global": {
+        "branches": 0,
+        "functions": 0,
+        "lines": 0
+      }
+    }
+  },
+  "devDependencies": {
+    "@jest/globals": "^30.3.0",
+    "@lvce-editor/constants": "^5.8.0",
+    "@lvce-editor/rpc": "^6.4.0",
+    "@lvce-editor/rpc-registry": "^9.16.0",
+    "jest": "^30.3.0",
+    "ts-jest": "^29.4.9"
+  }
+}
