@@ -1,6 +1,7 @@
 import { expect, test } from '@jest/globals'
 import { getLoggedInState } from '../src/parts/GetLoggedInState/GetLoggedInState.ts'
 import { isLoginResponse } from '../src/parts/IsLoginResponse/IsLoginResponse.ts'
+import type { LoginResponse } from '../src/parts/LoginResponse/LoginResponse.ts'
 
 test('isLoginResponse returns false for null', () => {
   expect(isLoginResponse(null)).toBe(false)
@@ -24,7 +25,7 @@ test('getLoggedInState applies login response values', () => {
     userUsedTokens: 1,
   }
 
-  const response = {
+  const response: LoginResponse = {
     accessToken: 'token-1',
     subscriptionPlan: 'pro',
     usedTokens: 42,
@@ -56,7 +57,7 @@ test('getLoggedInState falls back when response values are invalid', () => {
     subscriptionPlan: false,
     usedTokens: '2',
     userName: undefined,
-  }
+  } as unknown as LoginResponse
 
   expect(getLoggedInState(state, response)).toEqual({
     authAccessToken: '',
