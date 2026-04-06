@@ -1,18 +1,18 @@
 import { delay } from '../Delay/Delay.ts'
 
-interface MockBackendAuthSuccess {
+export interface MockBackendAuthSuccess {
   readonly delay: number
   readonly response: unknown
   readonly type: 'success'
 }
 
-interface MockBackendAuthError {
+export interface MockBackendAuthError {
   readonly delay: number
   readonly message: string
   readonly type: 'error'
 }
 
-type MockBackendAuthResponse = MockBackendAuthSuccess | MockBackendAuthError
+export type MockBackendAuthResponse = MockBackendAuthSuccess | MockBackendAuthError
 
 let nextLoginResponse: MockBackendAuthResponse | undefined
 let nextRefreshResponse: MockBackendAuthResponse | undefined
