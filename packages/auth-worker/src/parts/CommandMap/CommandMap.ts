@@ -11,6 +11,7 @@ import {
   setNextLoginResponse,
   setNextRefreshResponse,
 } from '../MockBackendAuth/MockBackendAuth.ts'
+import { syncBackendAuth } from '../SyncBackendAuth/SyncBackendAuth.ts'
 
 export const commandMap = {
   'Auth.clearMocks': clear,
@@ -23,5 +24,6 @@ export const commandMap = {
   'Auth.logout': logout,
   'Auth.setNextLoginResponse': setNextLoginResponse,
   'Auth.setNextRefreshResponse': setNextRefreshResponse,
+  'Auth.syncBackendAuth': syncBackendAuth,
   'HandleMessagePort.handleMessagePort': handleMessagePort,
 }
