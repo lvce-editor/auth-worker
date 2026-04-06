@@ -1,7 +1,7 @@
 import { expect, test } from '@jest/globals'
+import type { LoginResponse } from '../src/parts/LoginResponse/LoginResponse.ts'
 import { getLoggedInState } from '../src/parts/GetLoggedInState/GetLoggedInState.ts'
 import { isLoginResponse } from '../src/parts/IsLoginResponse/IsLoginResponse.ts'
-import type { LoginResponse } from '../src/parts/LoginResponse/LoginResponse.ts'
 
 test('isLoginResponse returns false for null', () => {
   expect(isLoginResponse(null)).toBe(false)
