@@ -1,3 +1,5 @@
+import { delay } from '../Delay/Delay.ts'
+
 interface MockBackendAuthSuccess {
   readonly delay: number
   readonly response: unknown
@@ -33,7 +35,7 @@ export const consumeNextLoginResponse = async (): Promise<unknown> => {
   const response = nextLoginResponse
   nextLoginResponse = undefined
   if (response.delay > 0) {
-    await new Promise((resolve) => setTimeout(resolve, response.delay))
+    await delay(response.delay)
   }
   if (response.type === 'error') {
     throw new Error(response.message)
