@@ -1,12 +1,9 @@
-import type { BackendAuthState } from '../BackendAuthState/BackendAuthState.ts'
+import type { LoginResult } from '../HandleClickLogin/HandleClickLogin.ts'
 
-export const getLoggedOutBackendAuthState = (authErrorMessage = ''): BackendAuthState => {
+export const getLoggedOutBackendAuthState = (authErrorMessage = ''): LoginResult => {
   return {
     authAccessToken: '',
     authErrorMessage,
-    userName: '',
     userState: 'loggedOut',
-    userSubscriptionPlan: '',
-    userUsedTokens: 0,
   }
 }

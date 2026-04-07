@@ -1,5 +1,5 @@
 import { RendererWorker } from '@lvce-editor/rpc-registry'
-import type { BackendAuthState } from '../BackendAuthState/BackendAuthState.ts'
+import type { LoginResult } from '../HandleClickLogin/HandleClickLogin.ts'
 import { delay } from '../Delay/Delay.ts'
 import { exchangeElectronAuthorizationCode } from '../ExchangeElectronAuthorizationCode/ExchangeElectronAuthorizationCode.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
@@ -15,7 +15,7 @@ export const waitForElectronBackendLogin = async (
   redirectUri: string,
   timeoutMs = 30_000,
   pollIntervalMs = 1000,
-): Promise<BackendAuthState> => {
+): Promise<LoginResult> => {
   const started = Date.now()
   const deadline = started + timeoutMs
   while (Date.now() < deadline) {

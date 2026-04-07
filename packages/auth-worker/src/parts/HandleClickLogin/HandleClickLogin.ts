@@ -4,16 +4,26 @@ import { getLoggedInState } from '../GetLoggedInState/GetLoggedInState.ts'
 import { isLoginResponse } from '../IsLoginResponse/IsLoginResponse.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
 
-export const handleClickLogin = async (state: any): Promise<any> => {
-  if (!state.backendUrl) {
+export interface LoginOptions {
+  readonly backendUrl: string
+  readonly platform: number
+}
+
+export interface LoginResult {
+  readonly authAccessToken?: string
+  readonly authErrorMessage: string
+  readonly userState: 'loggedOut' | 'loggingIn' | 'loggedIn'
+}
+
+export const handleClickLogin = async (options: LoginOptions): Promise<LoginResult> => {
+  const { backendUrl, platform } = options
+  if (!backendUrl) {
     return {
-      ...state,
       authErrorMessage: 'Backend URL is missing.',
       userState: 'loggedOut',
     }
   }
-  const signingInState: any = {
-    ...state,
+  const signingInState: LoginResult = {
     authErrorMessage: '',
     userState: 'loggingIn',
   }
@@ -22,24 +32,21 @@ export const handleClickLogin = async (state: any): Promise<any> => {
       const response = await MockBackendAuth.consumeNextLoginResponse()
       if (!isLoginResponse(response)) {
         return {
-          ...signingInState,
           authErrorMessage: 'Backend returned an invalid login response.',
           userState: 'loggedOut',
         }
       }
       if (typeof response.error === 'string' && response.error) {
         return {
-          ...signingInState,
           authErrorMessage: response.error,
           userState: 'loggedOut',
         }
       }
       return getLoggedInState(signingInState, response)
     }
-    await OpenerWorker.openUrl(getBackendLoginUrl(state.backendUrl), state.platform)
-    const authState = await waitForBackendLogin(state.backendUrl)
+    await OpenerWorker.openUrl(getBackendLoginUrl(backendUrl), platform)
+    const authState = await waitForBackendLogin(backendUrl)
     return {
-      ...signingInState,
       ...authState,
     }
   } catch (error) {

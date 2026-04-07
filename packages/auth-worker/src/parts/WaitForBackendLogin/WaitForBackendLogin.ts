@@ -1,9 +1,9 @@
-import type { BackendAuthState } from '../BackendAuthState/BackendAuthState.ts'
+import type { LoginResult } from '../HandleClickLogin/HandleClickLogin.ts'
 import { delay } from '../Delay/Delay.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 import { syncBackendAuth } from '../SyncBackendAuth/SyncBackendAuth.ts'
 
-export const waitForBackendLogin = async (backendUrl: string, timeoutMs = 30_000, pollIntervalMs = 1000): Promise<BackendAuthState> => {
+export const waitForBackendLogin = async (backendUrl: string, timeoutMs = 30_000, pollIntervalMs = 1000): Promise<LoginResult> => {
   const deadline = Date.now() + timeoutMs
   let lastErrorMessage = ''
   while (Date.now() < deadline) {
