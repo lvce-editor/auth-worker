@@ -1,10 +1,18 @@
 import { PlatformType } from '@lvce-editor/constants'
 import { RendererWorker } from '@lvce-editor/rpc-registry'
 import { getBackendAuthUrl } from '../GetBackendAuthUrl/GetBackendAuthUrl.ts'
+import { errorHtml, successHtml } from '../OAuthCallbackHtml/OAuthCallbackHtml.ts'
 
 export interface BackendLoginRequest {
   readonly loginUrl: string
   readonly redirectUri: string
+}
+
+export const getElectronRedirectUri = async (
+  uid: number,
+  invoke: (method: string, ...params: readonly string[]) => Promise<number | string>,
+): Promise<string> => {
+  return `http://localhost:${await invoke('OAuthServer.create', String(uid), successHtml, errorHtml)}`
 }
 
 const getCurrentHref = async (): Promise<string> => {
@@ -24,7 +32,7 @@ const getEffectiveRedirectUri = async (platform: number, uid: number, redirectUr
     return redirectUri
   }
   if (platform === PlatformType.Electron) {
-    return `http://localhost:${await RendererWorker.invoke('OAuthServer.create', String(uid))}`
+    return getElectronRedirectUri(uid, RendererWorker.invoke)
   }
   return getCurrentHref()
 }
