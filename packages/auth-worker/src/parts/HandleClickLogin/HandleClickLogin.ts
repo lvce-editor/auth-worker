@@ -1,8 +1,11 @@
+import { PlatformType } from '@lvce-editor/constants'
 import { OpenerWorker } from '@lvce-editor/rpc-registry'
-import { getBackendLoginUrl, getLoggedOutBackendAuthState, waitForBackendLogin } from '../BackendAuth/BackendAuth.ts'
+import { getLoggedOutBackendAuthState, waitForBackendLogin } from '../BackendAuth/BackendAuth.ts'
+import { getBackendLoginRequest } from '../GetBackendLoginRequest/GetBackendLoginRequest.ts'
 import { getLoggedInState } from '../GetLoggedInState/GetLoggedInState.ts'
 import { isLoginResponse } from '../IsLoginResponse/IsLoginResponse.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
+import { waitForElectronBackendLogin } from '../WaitForElectronBackendLogin/WaitForElectronBackendLogin.ts'
 
 export interface LoginOptions {
   readonly backendUrl: string
@@ -44,8 +47,12 @@ export const handleClickLogin = async (options: LoginOptions): Promise<LoginResu
       }
       return getLoggedInState(signingInState, response)
     }
-    await OpenerWorker.openUrl(getBackendLoginUrl(backendUrl), platform)
-    const authState = await waitForBackendLogin(backendUrl)
+    const uid = 0
+    const { loginUrl, redirectUri } = await getBackendLoginRequest(backendUrl, platform, uid)
+    const authUseRedirect = false
+    await OpenerWorker.invoke('Open.openUrl', loginUrl, platform, authUseRedirect)
+    const authState =
+      platform === PlatformType.Electron ? await waitForElectronBackendLogin(backendUrl, uid, redirectUri) : await waitForBackendLogin(backendUrl)
     return {
       ...authState,
     }
