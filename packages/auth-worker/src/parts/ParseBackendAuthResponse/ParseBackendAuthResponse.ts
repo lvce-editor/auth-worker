@@ -1,4 +1,3 @@
-import type { BackendAuthState } from '../BackendAuthState/BackendAuthState.ts'
 import type { LoginResult } from '../HandleClickLogin/HandleClickLogin.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 import { isBackendAuthResponse } from '../IsBackendAuthResponse/IsBackendAuthResponse.ts'
