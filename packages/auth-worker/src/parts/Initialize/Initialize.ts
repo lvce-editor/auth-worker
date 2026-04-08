@@ -4,7 +4,7 @@ import { syncBackendAuth } from '../SyncBackendAuth/SyncBackendAuth.ts'
 
 export interface InitializeOptions {
   readonly backendUrl: string
-  readonly href?: string
+  readonly href: string
   readonly platform: number
 }
 
