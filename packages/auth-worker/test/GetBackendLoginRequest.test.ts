@@ -1,5 +1,5 @@
 import { expect, test } from '@jest/globals'
-const { getElectronRedirectUri } = await import('../src/parts/GetBackendLoginRequest/GetBackendLoginRequest.ts')
+const { getElectronRedirectUri } = await import('../src/parts/GetElectronRedirectUri/GetElectronRedirectUri.ts')
 const { errorHtml, successHtml } = await import('../src/parts/OAuthCallbackHtml/OAuthCallbackHtml.ts')
 
 test('getElectronRedirectUri uses configured auth callback html for electron oauth server', async () => {
