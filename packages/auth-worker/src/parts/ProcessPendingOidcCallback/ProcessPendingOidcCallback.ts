@@ -3,20 +3,20 @@ import { getCurrentHref } from '../GetCurrentHref/GetCurrentHref.ts'
 import { clearPendingOidcTransaction, getPendingOidcTransaction } from '../PendingOidcTransaction/PendingOidcTransaction.ts'
 import { clearStoredAuthError, setStoredAuthError } from '../StoredAuthError/StoredAuthError.ts'
 
-const getCallbackUrl = async (): Promise<URL | undefined> => {
-  const href = await getCurrentHref()
-  if (!href) {
+const getCallbackUrl = async (href?: string): Promise<URL | undefined> => {
+  const actualHref = href || (await getCurrentHref())
+  if (!actualHref) {
     return undefined
   }
   try {
-    return new URL(href)
+    return new URL(actualHref)
   } catch {
     return undefined
   }
 }
 
-export const processPendingOidcCallback = async (): Promise<boolean> => {
-  const callbackUrl = await getCallbackUrl()
+export const processPendingOidcCallback = async (href?: string): Promise<boolean> => {
+  const callbackUrl = await getCallbackUrl(href)
   if (!callbackUrl) {
     return false
   }

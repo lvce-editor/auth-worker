@@ -38,12 +38,6 @@ test('initialize processes a pending oidc callback and returns the synced backen
     redirectUri: 'https://app.example/callback',
     state: 'state-1',
   })
-  Object.defineProperty(globalThis, 'location', {
-    configurable: true,
-    value: {
-      href: 'https://app.example/callback?code=code-1&state=state-1',
-    },
-  })
   const fetchMock = jest
     .fn<typeof fetch>()
     .mockResolvedValueOnce(createResponse(200, {}))
@@ -59,6 +53,7 @@ test('initialize processes a pending oidc callback and returns the synced backen
 
   const result = await initialize({
     backendUrl: 'https://backend.example',
+    href: 'https://app.example/callback?code=code-1&state=state-1',
     platform: 1,
   })
 
