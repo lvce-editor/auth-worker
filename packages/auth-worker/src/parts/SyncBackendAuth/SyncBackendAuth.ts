@@ -3,12 +3,17 @@ import { getBackendRefreshUrl } from '../GetBackendRefreshUrl/GetBackendRefreshU
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
 import { parseBackendAuthResponse } from '../ParseBackendAuthResponse/ParseBackendAuthResponse.ts'
+import { consumeStoredAuthError } from '../StoredAuthError/StoredAuthError.ts'
 
 export const syncBackendAuth = async (backendUrl: string): Promise<LoginResult> => {
   if (!backendUrl) {
     return getLoggedOutBackendAuthState('Backend URL is missing.')
   }
   try {
+    const storedAuthError = await consumeStoredAuthError()
+    if (storedAuthError) {
+      return getLoggedOutBackendAuthState(storedAuthError)
+    }
     if (MockBackendAuth.hasPendingMockRefreshResponse()) {
       const mockResponse = await MockBackendAuth.consumeNextRefreshResponse()
       return parseBackendAuthResponse(mockResponse)

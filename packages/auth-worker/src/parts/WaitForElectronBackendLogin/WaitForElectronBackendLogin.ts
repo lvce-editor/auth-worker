@@ -13,6 +13,7 @@ export const waitForElectronBackendLogin = async (
   backendUrl: string,
   uid: number,
   redirectUri: string,
+  codeVerifier: string,
   timeoutMs = 30_000,
   pollIntervalMs = 1000,
 ): Promise<LoginResult> => {
@@ -23,7 +24,7 @@ export const waitForElectronBackendLogin = async (
     if (hasAuthorizationCode(authorizationCode)) {
       const elapsed = Date.now() - started
       const remainingTime = Math.max(0, timeoutMs - elapsed)
-      await exchangeElectronAuthorizationCode(backendUrl, authorizationCode, redirectUri)
+      await exchangeElectronAuthorizationCode(backendUrl, authorizationCode, codeVerifier, redirectUri)
       return waitForBackendLogin(backendUrl, remainingTime, pollIntervalMs)
     }
     await delay(pollIntervalMs)

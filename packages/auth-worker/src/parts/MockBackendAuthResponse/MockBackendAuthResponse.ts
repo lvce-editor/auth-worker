@@ -4,7 +4,6 @@ interface MockBackendAuthResponsePayload {
   readonly accessToken?: string
   readonly delay?: number
   readonly message?: string
-  readonly refreshToken?: string
   readonly subscriptionPlan?: string
   readonly type?: 'error' | 'success'
   readonly usedTokens?: number
