@@ -10,7 +10,6 @@ export interface InitializeOptions {
 
 export const initialize = async (options: InitializeOptions): Promise<LoginResult> => {
   const { backendUrl, href } = options
-  console.log({ options })
   await processPendingOidcCallback(href)
   return syncBackendAuth(backendUrl)
 }
