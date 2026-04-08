@@ -8,9 +8,8 @@ const { createPkceValues } = await import('../src/parts/CreatePkceValues/CreateP
 test('createPkceValues returns oauth-compatible pkce values', async () => {
   const result = await createPkceValues()
 
-  expect(result).toEqual({
-    codeChallenge: await oauth.calculatePKCECodeChallenge(result.codeVerifier),
-    codeVerifier: expect.any(String),
-  })
+  expect(result.codeChallenge).toBe(await oauth.calculatePKCECodeChallenge(result.codeVerifier))
   expect(result.codeVerifier).toHaveLength(43)
+  expect(result.nonce).toHaveLength(32)
+  expect(result.state).toHaveLength(32)
 })

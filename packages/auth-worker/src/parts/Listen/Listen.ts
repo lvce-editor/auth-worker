@@ -4,5 +4,5 @@ import { processPendingOidcCallback } from '../ProcessPendingOidcCallback/Proces
 
 export const listen = async (): Promise<void> => {
   await Promise.all([initializeRendererWorker(), initializeOpenerWorker()])
-  await processPendingOidcCallback()
+  void processPendingOidcCallback()
 }
