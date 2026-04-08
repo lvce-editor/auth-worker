@@ -9,8 +9,7 @@ export interface InitializeOptions {
 }
 
 export const initialize = async (options: InitializeOptions): Promise<LoginResult> => {
-  const { backendUrl, href, platform } = options
-  void platform
+  const { backendUrl, href } = options
   await processPendingOidcCallback(href)
   return syncBackendAuth(backendUrl)
 }
