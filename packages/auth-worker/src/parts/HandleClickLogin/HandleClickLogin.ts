@@ -8,6 +8,7 @@ import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
 import { waitForElectronBackendLogin } from '../WaitForElectronBackendLogin/WaitForElectronBackendLogin.ts'
 
 export interface LoginOptions {
+  readonly authUseRedirect?: boolean
   readonly backendUrl: string
   readonly platform: number
 }
@@ -19,7 +20,7 @@ export interface LoginResult {
 }
 
 export const handleClickLogin = async (options: LoginOptions): Promise<LoginResult> => {
-  const { backendUrl, platform } = options
+  const { authUseRedirect, backendUrl, platform } = options
   if (!backendUrl) {
     return {
       authErrorMessage: 'Backend URL is missing.',
@@ -49,7 +50,6 @@ export const handleClickLogin = async (options: LoginOptions): Promise<LoginResu
     }
     const uid = 0
     const { loginUrl, redirectUri } = await getBackendLoginRequest(backendUrl, platform, uid)
-    const authUseRedirect = false
     await OpenerWorker.invoke('Open.openUrl', loginUrl, platform, authUseRedirect)
     const authState =
       platform === PlatformType.Electron ? await waitForElectronBackendLogin(backendUrl, uid, redirectUri) : await waitForBackendLogin(backendUrl)
