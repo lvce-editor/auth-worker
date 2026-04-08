@@ -30,7 +30,6 @@ export const processPendingOidcCallback = async (): Promise<boolean> => {
   const transaction = await getPendingOidcTransaction()
   await clearPendingOidcTransaction()
   if (!transaction) {
-    await setStoredAuthError('Backend authentication failed: missing OIDC transaction.')
     return false
   }
   if (error) {

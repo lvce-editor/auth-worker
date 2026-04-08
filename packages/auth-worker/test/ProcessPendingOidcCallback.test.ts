@@ -94,3 +94,20 @@ test('processPendingOidcCallback stores an error when the callback state does no
   expect(await getPendingOidcTransaction()).toEqual(undefined)
   expect(await getStoredAuthError()).toBe('Backend authentication failed: invalid state parameter.')
 })
+
+test('processPendingOidcCallback ignores repeated callback urls when no transaction is pending', async () => {
+  Object.defineProperty(globalThis, 'location', {
+    configurable: true,
+    value: {
+      href: 'https://app.example/callback?code=code-1&state=state-1',
+    },
+  })
+  const fetchMock = jest.fn<typeof fetch>()
+  globalThis.fetch = fetchMock
+
+  const result = await processPendingOidcCallback()
+
+  expect(result).toBe(false)
+  expect(fetchMock).toHaveBeenCalledTimes(0)
+  expect(await getStoredAuthError()).toBe('')
+})
