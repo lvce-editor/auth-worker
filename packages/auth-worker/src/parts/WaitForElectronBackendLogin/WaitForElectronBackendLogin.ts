@@ -3,7 +3,6 @@ import type { LoginResult } from '../HandleClickLogin/HandleClickLogin.ts'
 import { delay } from '../Delay/Delay.ts'
 import { exchangeElectronAuthorizationCode } from '../ExchangeElectronAuthorizationCode/ExchangeElectronAuthorizationCode.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
-import { setStoredRefreshToken } from '../StoredRefreshToken/StoredRefreshToken.ts'
 import { waitForBackendLogin } from '../WaitForBackendLogin/WaitForBackendLogin.ts'
 
 const hasAuthorizationCode = (value: unknown): boolean => {
@@ -25,8 +24,7 @@ export const waitForElectronBackendLogin = async (
     if (hasAuthorizationCode(authorizationCode)) {
       const elapsed = Date.now() - started
       const remainingTime = Math.max(0, timeoutMs - elapsed)
-      const refreshToken = await exchangeElectronAuthorizationCode(backendUrl, authorizationCode, codeVerifier, redirectUri)
-      await setStoredRefreshToken(refreshToken)
+      await exchangeElectronAuthorizationCode(backendUrl, authorizationCode, codeVerifier, redirectUri)
       return waitForBackendLogin(backendUrl, remainingTime, pollIntervalMs)
     }
     await delay(pollIntervalMs)

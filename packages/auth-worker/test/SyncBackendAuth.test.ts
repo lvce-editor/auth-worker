@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
 
 const { syncBackendAuth } = await import('../src/parts/SyncBackendAuth/SyncBackendAuth.ts')
-const { clearStoredRefreshToken, getStoredRefreshToken, setStoredRefreshToken } =
-  await import('../src/parts/StoredRefreshToken/StoredRefreshToken.ts')
 
 const originalFetch = globalThis.fetch
 
@@ -14,21 +12,16 @@ const createResponse = (status: number, payload: unknown): Response => {
   } as Response
 }
 
-beforeEach(() => {
-  return clearStoredRefreshToken()
-})
+beforeEach(() => {})
 
 afterEach(() => {
-  void clearStoredRefreshToken()
   globalThis.fetch = originalFetch
 })
 
-test('syncBackendAuth sends stored refresh token and rotates it from response payload', async () => {
-  await setStoredRefreshToken('refresh-1')
+test('syncBackendAuth uses cookie credentials and parses the access token from response payload', async () => {
   const fetchMock = jest.fn<typeof fetch>().mockResolvedValue(
     createResponse(200, {
       accessToken: 'access-1',
-      refreshToken: 'refresh-2',
       subscriptionPlan: 'pro',
       usedTokens: 42,
       userName: 'Alice',
@@ -43,7 +36,6 @@ test('syncBackendAuth sends stored refresh token and rotates it from response pa
     credentials: 'include',
     headers: {
       Accept: 'application/json',
-      Authorization: 'Bearer refresh-1',
     },
     method: 'POST',
   })
@@ -55,11 +47,9 @@ test('syncBackendAuth sends stored refresh token and rotates it from response pa
     userSubscriptionPlan: 'pro',
     userUsedTokens: 42,
   })
-  expect(await getStoredRefreshToken()).toBe('refresh-2')
 })
 
-test('syncBackendAuth clears stored refresh token on unauthorized response', async () => {
-  await setStoredRefreshToken('refresh-1')
+test('syncBackendAuth returns logged out on unauthorized response', async () => {
   const fetchMock = jest.fn<typeof fetch>().mockResolvedValue(createResponse(401, { error: 'unauthorized' }))
   globalThis.fetch = fetchMock
 
@@ -70,5 +60,4 @@ test('syncBackendAuth clears stored refresh token on unauthorized response', asy
     authErrorMessage: '',
     userState: 'loggedOut',
   })
-  expect(await getStoredRefreshToken()).toBe('')
 })

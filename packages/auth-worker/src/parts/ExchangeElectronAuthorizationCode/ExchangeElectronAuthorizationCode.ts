@@ -4,7 +4,6 @@ import { oidcClientId } from '../OidcConfig/OidcConfig.ts'
 interface OidcTokenResponse {
   readonly error?: string
   readonly error_description?: string
-  readonly refresh_token?: string
 }
 
 const getResponsePayload = async (response: Response): Promise<OidcTokenResponse | undefined> => {
@@ -30,7 +29,7 @@ export const exchangeElectronAuthorizationCode = async (
   code: string,
   codeVerifier: string,
   redirectUri: string,
-): Promise<string> => {
+): Promise<void> => {
   const response = await fetch(getBackendOidcTokenUrl(backendUrl), {
     body: new URLSearchParams({
       client_id: oidcClientId,
@@ -39,6 +38,7 @@ export const exchangeElectronAuthorizationCode = async (
       grant_type: 'authorization_code',
       redirect_uri: redirectUri,
     }),
+    credentials: 'include',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -49,8 +49,4 @@ export const exchangeElectronAuthorizationCode = async (
   if (!response.ok) {
     throw new Error(getExchangeErrorMessage(payload))
   }
-  if (!payload?.refresh_token) {
-    throw new Error('Backend did not return a refresh token.')
-  }
-  return payload.refresh_token
 }

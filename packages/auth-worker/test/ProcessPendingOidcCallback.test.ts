@@ -5,7 +5,6 @@ const { processPendingOidcCallback } = await import('../src/parts/ProcessPending
 const { clearPendingOidcTransaction, getPendingOidcTransaction, setPendingOidcTransaction } =
   await import('../src/parts/PendingOidcTransaction/PendingOidcTransaction.ts')
 const { clearStoredAuthError, getStoredAuthError } = await import('../src/parts/StoredAuthError/StoredAuthError.ts')
-const { clearStoredRefreshToken, getStoredRefreshToken } = await import('../src/parts/StoredRefreshToken/StoredRefreshToken.ts')
 
 const originalFetch = globalThis.fetch
 const originalLocation = globalThis.location
@@ -21,13 +20,11 @@ const createResponse = (status: number, payload: unknown): Response => {
 beforeEach(async () => {
   await clearPendingOidcTransaction()
   await clearStoredAuthError()
-  await clearStoredRefreshToken()
 })
 
 afterEach(async () => {
   await clearPendingOidcTransaction()
   await clearStoredAuthError()
-  await clearStoredRefreshToken()
   globalThis.fetch = originalFetch
   Object.defineProperty(globalThis, 'location', {
     configurable: true,
@@ -35,7 +32,7 @@ afterEach(async () => {
   })
 })
 
-test('processPendingOidcCallback exchanges the authorization code and stores the refresh token', async () => {
+test('processPendingOidcCallback exchanges the authorization code using credentialed requests', async () => {
   await setPendingOidcTransaction({
     backendUrl: 'https://backend.example',
     codeVerifier: 'verifier-1',
@@ -49,9 +46,7 @@ test('processPendingOidcCallback exchanges the authorization code and stores the
     },
   })
   const fetchMock = jest.fn<typeof fetch>().mockResolvedValue(
-    createResponse(200, {
-      refresh_token: 'refresh-1',
-    }),
+    createResponse(200, {}),
   )
   globalThis.fetch = fetchMock
 
@@ -67,13 +62,13 @@ test('processPendingOidcCallback exchanges the authorization code and stores the
       grant_type: 'authorization_code',
       redirect_uri: 'https://app.example/callback',
     }),
+    credentials: 'include',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     method: 'POST',
   })
-  expect(await getStoredRefreshToken()).toBe('refresh-1')
   expect(await getPendingOidcTransaction()).toEqual(undefined)
   expect(await getStoredAuthError()).toBe('')
 })
@@ -98,7 +93,6 @@ test('processPendingOidcCallback stores an error when the callback state does no
 
   expect(result).toBe(false)
   expect(fetchMock).toHaveBeenCalledTimes(0)
-  expect(await getStoredRefreshToken()).toBe('')
   expect(await getPendingOidcTransaction()).toEqual(undefined)
   expect(await getStoredAuthError()).toBe('Backend authentication failed: invalid state parameter.')
 })
