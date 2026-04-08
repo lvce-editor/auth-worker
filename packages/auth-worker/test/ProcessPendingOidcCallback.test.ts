@@ -45,9 +45,7 @@ test('processPendingOidcCallback exchanges the authorization code using credenti
       href: 'https://app.example/callback?code=code-1&state=state-1',
     },
   })
-  const fetchMock = jest.fn<typeof fetch>().mockResolvedValue(
-    createResponse(200, {}),
-  )
+  const fetchMock = jest.fn<typeof fetch>().mockResolvedValue(createResponse(200, {}))
   globalThis.fetch = fetchMock
 
   const result = await processPendingOidcCallback()
