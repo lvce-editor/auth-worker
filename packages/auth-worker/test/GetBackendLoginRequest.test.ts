@@ -36,7 +36,7 @@ test('getBackendLoginRequest builds electron oidc authorize request with pkce va
   expect(loginUrl.searchParams.get('redirect_uri')).toBe('http://127.0.0.1:3210/callback')
   expect(loginUrl.searchParams.get('response_type')).toBe('code')
   expect(loginUrl.searchParams.get('scope')).toBe(oidcScope)
-  expect(loginUrl.searchParams.get('state')).toBeTruthy()
+  expect(loginUrl.searchParams.has('state')).toBe(false)
 })
 
 test('getBackendLoginRequest builds web oidc authorize request with pkce values', async () => {
@@ -56,5 +56,5 @@ test('getBackendLoginRequest builds web oidc authorize request with pkce values'
   expect(loginUrl.searchParams.get('redirect_uri')).toBe('https://app.example/callback')
   expect(loginUrl.searchParams.get('response_type')).toBe('code')
   expect(loginUrl.searchParams.get('scope')).toBe(oidcScope)
-  expect(loginUrl.searchParams.get('state')).toBeTruthy()
+  expect(loginUrl.searchParams.has('state')).toBe(false)
 })

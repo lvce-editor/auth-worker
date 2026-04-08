@@ -6,7 +6,6 @@ interface PKCEValues {
   readonly codeChallenge: string
   readonly codeVerifier: string
   readonly nonce: string
-  readonly state: string
 }
 
 export const createPkceValues = async (): Promise<PKCEValues> => {
@@ -16,6 +15,5 @@ export const createPkceValues = async (): Promise<PKCEValues> => {
     codeChallenge,
     codeVerifier,
     nonce: oauth.generateRandomNonce(),
-    state: oauth.generateRandomState(),
   }
 }
