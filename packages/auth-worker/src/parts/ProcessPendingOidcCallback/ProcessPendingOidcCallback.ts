@@ -51,12 +51,7 @@ export const processPendingOidcCallback = async (): Promise<boolean> => {
     return false
   }
   try {
-    const refreshToken = await exchangeElectronAuthorizationCode(
-      transaction.backendUrl,
-      code,
-      transaction.codeVerifier,
-      transaction.redirectUri,
-    )
+    const refreshToken = await exchangeElectronAuthorizationCode(transaction.backendUrl, code, transaction.codeVerifier, transaction.redirectUri)
     await setStoredRefreshToken(refreshToken)
     await clearStoredAuthError()
     return true
