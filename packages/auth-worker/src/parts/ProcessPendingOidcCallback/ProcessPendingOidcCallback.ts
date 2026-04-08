@@ -1,22 +1,9 @@
 import { exchangeElectronAuthorizationCode } from '../ExchangeElectronAuthorizationCode/ExchangeElectronAuthorizationCode.ts'
-import { getCurrentHref } from '../GetCurrentHref/GetCurrentHref.ts'
 import { clearPendingOidcTransaction, getPendingOidcTransaction } from '../PendingOidcTransaction/PendingOidcTransaction.ts'
 import { clearStoredAuthError, setStoredAuthError } from '../StoredAuthError/StoredAuthError.ts'
 
-const getCallbackUrl = async (href?: string): Promise<URL | undefined> => {
-  const actualHref = href || (await getCurrentHref())
-  if (!actualHref) {
-    return undefined
-  }
-  try {
-    return new URL(actualHref)
-  } catch {
-    return undefined
-  }
-}
-
-export const processPendingOidcCallback = async (href?: string): Promise<boolean> => {
-  const callbackUrl = await getCallbackUrl(href)
+export const processPendingOidcCallback = async (href: string): Promise<boolean> => {
+  const callbackUrl = new URL(href)
   if (!callbackUrl) {
     return false
   }
