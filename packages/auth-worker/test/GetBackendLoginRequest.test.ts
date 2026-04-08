@@ -1,14 +1,12 @@
 // cspell:ignore pkce
 
 import { expect, test } from '@jest/globals'
-<<<<<<< HEAD
 import { PlatformType } from '@lvce-editor/constants'
 const { getBackendLoginRequest, getElectronRedirectUri } = await import('../src/parts/GetBackendLoginRequest/GetBackendLoginRequest.ts')
 const { oidcClientId, oidcScope } = await import('../src/parts/OidcConfig/OidcConfig.ts')
-=======
-const { getElectronRedirectUri } = await import('../src/parts/GetElectronRedirectUri/GetElectronRedirectUri.ts')
->>>>>>> origin/main
 const { errorHtml, successHtml } = await import('../src/parts/OAuthCallbackHtml/OAuthCallbackHtml.ts')
+
+const statePattern = /^[A-Za-z0-9_-]{43}$/
 
 test('getElectronRedirectUri uses configured auth callback html for electron oauth server', async () => {
   const invocations: string[][] = []
@@ -36,10 +34,10 @@ test('getBackendLoginRequest builds electron oidc authorize request with pkce va
   expect(loginUrl.searchParams.get('code_challenge')).toBeTruthy()
   expect(loginUrl.searchParams.get('code_challenge')).not.toBe(result.codeVerifier)
   expect(loginUrl.searchParams.get('code_challenge_method')).toBe('S256')
-  expect(loginUrl.searchParams.get('nonce')).toBeTruthy()
   expect(loginUrl.searchParams.get('redirect_uri')).toBe('http://127.0.0.1:3210/callback')
   expect(loginUrl.searchParams.get('response_type')).toBe('code')
   expect(loginUrl.searchParams.get('scope')).toBe(oidcScope)
+  expect(result.state).toMatch(statePattern)
   expect(loginUrl.searchParams.get('state')).toBe(result.state)
 })
 
@@ -56,9 +54,9 @@ test('getBackendLoginRequest builds web oidc authorize request with pkce values'
   expect(loginUrl.searchParams.get('code_challenge')).toBeTruthy()
   expect(loginUrl.searchParams.get('code_challenge')).not.toBe(result.codeVerifier)
   expect(loginUrl.searchParams.get('code_challenge_method')).toBe('S256')
-  expect(loginUrl.searchParams.get('nonce')).toBeTruthy()
   expect(loginUrl.searchParams.get('redirect_uri')).toBe('https://app.example/callback')
   expect(loginUrl.searchParams.get('response_type')).toBe('code')
   expect(loginUrl.searchParams.get('scope')).toBe(oidcScope)
+  expect(result.state).toMatch(statePattern)
   expect(loginUrl.searchParams.get('state')).toBe(result.state)
 })

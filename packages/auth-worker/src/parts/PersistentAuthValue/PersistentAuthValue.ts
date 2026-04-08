@@ -5,6 +5,8 @@ const memoryStorage = new Map<string, string>()
 
 let databasePromise: Promise<IDBDatabase | undefined> | undefined
 
+// IndexedDB request objects are mutable browser primitives and cannot satisfy the readonly rule structurally.
+// eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
 const requestToPromise = <T>(request: IDBRequest<T>): Promise<T> => {
   return new Promise((resolve, reject) => {
     request.addEventListener('success', () => {
@@ -16,6 +18,7 @@ const requestToPromise = <T>(request: IDBRequest<T>): Promise<T> => {
   })
 }
 
+// eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
 const transactionToPromise = (transaction: IDBTransaction): Promise<void> => {
   return new Promise((resolve, reject) => {
     transaction.addEventListener('complete', () => {
