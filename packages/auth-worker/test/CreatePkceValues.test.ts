@@ -11,8 +11,6 @@ test('createPkceValues returns oauth-compatible pkce values', async () => {
   expect(result).toEqual({
     codeChallenge: await oauth.calculatePKCECodeChallenge(result.codeVerifier),
     codeVerifier: expect.any(String),
-    nonce: expect.any(String),
   })
   expect(result.codeVerifier).toHaveLength(43)
-  expect(result.nonce).toHaveLength(43)
 })

@@ -3,11 +3,11 @@ import { clearStoredRefreshToken, getStoredRefreshToken } from '../StoredRefresh
 
 export const logoutFromBackend = async (backendUrl: string): Promise<void> => {
   if (!backendUrl) {
-    clearStoredRefreshToken()
+    await clearStoredRefreshToken()
     return
   }
   try {
-    const storedRefreshToken = getStoredRefreshToken()
+    const storedRefreshToken = await getStoredRefreshToken()
     await fetch(getBackendLogoutUrl(backendUrl), {
       credentials: 'include',
       headers: {
@@ -19,6 +19,6 @@ export const logoutFromBackend = async (backendUrl: string): Promise<void> => {
   } catch {
     // Ignore logout failures and still clear local auth state.
   } finally {
-    clearStoredRefreshToken()
+    await clearStoredRefreshToken()
   }
 }

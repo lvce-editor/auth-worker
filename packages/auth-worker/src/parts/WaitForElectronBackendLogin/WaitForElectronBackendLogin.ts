@@ -26,7 +26,7 @@ export const waitForElectronBackendLogin = async (
       const elapsed = Date.now() - started
       const remainingTime = Math.max(0, timeoutMs - elapsed)
       const refreshToken = await exchangeElectronAuthorizationCode(backendUrl, authorizationCode, codeVerifier, redirectUri)
-      setStoredRefreshToken(refreshToken)
+      await setStoredRefreshToken(refreshToken)
       return waitForBackendLogin(backendUrl, remainingTime, pollIntervalMs)
     }
     await delay(pollIntervalMs)

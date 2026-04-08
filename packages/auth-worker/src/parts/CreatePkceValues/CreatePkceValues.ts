@@ -5,7 +5,6 @@ import * as oauth from 'oauth4webapi'
 interface PKCEValues {
   readonly codeChallenge: string
   readonly codeVerifier: string
-  readonly nonce: string
 }
 
 export const createPkceValues = async (): Promise<PKCEValues> => {
@@ -14,6 +13,5 @@ export const createPkceValues = async (): Promise<PKCEValues> => {
   return {
     codeChallenge,
     codeVerifier,
-    nonce: oauth.generateRandomNonce(),
   }
 }

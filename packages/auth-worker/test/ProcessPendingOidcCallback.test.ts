@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
 
+const { oidcClientId } = await import('../src/parts/OidcConfig/OidcConfig.ts')
 const { processPendingOidcCallback } = await import('../src/parts/ProcessPendingOidcCallback/ProcessPendingOidcCallback.ts')
 const { clearPendingOidcTransaction, getPendingOidcTransaction, setPendingOidcTransaction } =
   await import('../src/parts/PendingOidcTransaction/PendingOidcTransaction.ts')
@@ -58,9 +59,9 @@ test('processPendingOidcCallback exchanges the authorization code and stores the
 
   expect(result).toBe(true)
   expect(fetchMock).toHaveBeenCalledTimes(1)
-  expect(fetchMock).toHaveBeenCalledWith('https://backend.example/auth/oidc/token', {
+  expect(fetchMock).toHaveBeenCalledWith('https://backend.example/oidc/token', {
     body: new URLSearchParams({
-      client_id: 'lvce',
+      client_id: oidcClientId,
       code: 'code-1',
       code_verifier: 'verifier-1',
       grant_type: 'authorization_code',

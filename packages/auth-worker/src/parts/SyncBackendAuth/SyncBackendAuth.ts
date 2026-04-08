@@ -3,6 +3,7 @@ import { getBackendRefreshUrl } from '../GetBackendRefreshUrl/GetBackendRefreshU
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
 import { parseBackendAuthResponse } from '../ParseBackendAuthResponse/ParseBackendAuthResponse.ts'
+import { consumeStoredAuthError } from '../StoredAuthError/StoredAuthError.ts'
 import { clearStoredRefreshToken, getStoredRefreshToken, setStoredRefreshToken } from '../StoredRefreshToken/StoredRefreshToken.ts'
 
 const getRefreshTokenFromPayload = (value: unknown): string => {
@@ -18,11 +19,15 @@ export const syncBackendAuth = async (backendUrl: string): Promise<LoginResult> 
     return getLoggedOutBackendAuthState('Backend URL is missing.')
   }
   try {
+    const storedAuthError = await consumeStoredAuthError()
+    if (storedAuthError) {
+      return getLoggedOutBackendAuthState(storedAuthError)
+    }
     if (MockBackendAuth.hasPendingMockRefreshResponse()) {
       const mockResponse = await MockBackendAuth.consumeNextRefreshResponse()
       return parseBackendAuthResponse(mockResponse)
     }
-    const storedRefreshToken = getStoredRefreshToken()
+    const storedRefreshToken = await getStoredRefreshToken()
     const response = await fetch(getBackendRefreshUrl(backendUrl), {
       credentials: 'include',
       headers: {
@@ -32,7 +37,7 @@ export const syncBackendAuth = async (backendUrl: string): Promise<LoginResult> 
       method: 'POST',
     })
     if (response.status === 401 || response.status === 403) {
-      clearStoredRefreshToken()
+      await clearStoredRefreshToken()
       return getLoggedOutBackendAuthState()
     }
     let payload: unknown = undefined
@@ -47,14 +52,14 @@ export const syncBackendAuth = async (backendUrl: string): Promise<LoginResult> 
     }
     const refreshToken = getRefreshTokenFromPayload(payload)
     if (refreshToken) {
-      setStoredRefreshToken(refreshToken)
+      await setStoredRefreshToken(refreshToken)
     }
     const parsed = parseBackendAuthResponse(payload)
     if (parsed.authErrorMessage) {
       return getLoggedOutBackendAuthState(parsed.authErrorMessage)
     }
     if (!parsed.authAccessToken) {
-      clearStoredRefreshToken()
+      await clearStoredRefreshToken()
       return getLoggedOutBackendAuthState()
     }
     return parsed

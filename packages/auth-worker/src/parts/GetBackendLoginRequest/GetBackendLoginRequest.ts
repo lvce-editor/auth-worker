@@ -10,11 +10,12 @@ export interface BackendLoginRequest {
   readonly codeVerifier: string
   readonly loginUrl: string
   readonly redirectUri: string
+  readonly state: string
 }
 
 export const getBackendLoginRequest = async (backendUrl: string, platform = 0, uid = 0, redirectUri = ''): Promise<BackendLoginRequest> => {
   const effectiveRedirectUri = await getEffectiveRedirectUri(platform, uid, redirectUri)
-  const { codeChallenge, codeVerifier, nonce } = await createPkceValues()
+  const { codeChallenge, codeVerifier, nonce, state } = await createPkceValues()
   const loginUrl = new URL(getBackendAuthUrl(backendUrl, '/oidc/auth'))
   loginUrl.searchParams.set('client_id', oidcClientId)
   loginUrl.searchParams.set('code_challenge', codeChallenge)
@@ -23,9 +24,11 @@ export const getBackendLoginRequest = async (backendUrl: string, platform = 0, u
   loginUrl.searchParams.set('redirect_uri', effectiveRedirectUri)
   loginUrl.searchParams.set('response_type', 'code')
   loginUrl.searchParams.set('scope', oidcScope)
+  loginUrl.searchParams.set('state', state)
   return {
     codeVerifier,
     loginUrl: loginUrl.toString(),
     redirectUri: effectiveRedirectUri,
+    state,
   }
 }

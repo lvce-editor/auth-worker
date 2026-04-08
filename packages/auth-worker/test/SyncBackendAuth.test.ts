@@ -15,16 +15,16 @@ const createResponse = (status: number, payload: unknown): Response => {
 }
 
 beforeEach(() => {
-  clearStoredRefreshToken()
+  return clearStoredRefreshToken()
 })
 
 afterEach(() => {
-  clearStoredRefreshToken()
+  void clearStoredRefreshToken()
   globalThis.fetch = originalFetch
 })
 
 test('syncBackendAuth sends stored refresh token and rotates it from response payload', async () => {
-  setStoredRefreshToken('refresh-1')
+  await setStoredRefreshToken('refresh-1')
   const fetchMock = jest.fn<typeof fetch>().mockResolvedValue(
     createResponse(200, {
       accessToken: 'access-1',
@@ -55,11 +55,11 @@ test('syncBackendAuth sends stored refresh token and rotates it from response pa
     userSubscriptionPlan: 'pro',
     userUsedTokens: 42,
   })
-  expect(getStoredRefreshToken()).toBe('refresh-2')
+  expect(await getStoredRefreshToken()).toBe('refresh-2')
 })
 
 test('syncBackendAuth clears stored refresh token on unauthorized response', async () => {
-  setStoredRefreshToken('refresh-1')
+  await setStoredRefreshToken('refresh-1')
   const fetchMock = jest.fn<typeof fetch>().mockResolvedValue(createResponse(401, { error: 'unauthorized' }))
   globalThis.fetch = fetchMock
 
@@ -70,5 +70,5 @@ test('syncBackendAuth clears stored refresh token on unauthorized response', asy
     authErrorMessage: '',
     userState: 'loggedOut',
   })
-  expect(getStoredRefreshToken()).toBe('')
+  expect(await getStoredRefreshToken()).toBe('')
 })

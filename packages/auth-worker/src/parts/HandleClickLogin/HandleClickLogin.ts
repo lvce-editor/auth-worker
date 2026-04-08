@@ -5,6 +5,8 @@ import { getBackendLoginRequest } from '../GetBackendLoginRequest/GetBackendLogi
 import { getLoggedInState } from '../GetLoggedInState/GetLoggedInState.ts'
 import { isLoginResponse } from '../IsLoginResponse/IsLoginResponse.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
+import { clearPendingOidcTransaction, setPendingOidcTransaction } from '../PendingOidcTransaction/PendingOidcTransaction.ts'
+import { clearStoredAuthError } from '../StoredAuthError/StoredAuthError.ts'
 import { waitForElectronBackendLogin } from '../WaitForElectronBackendLogin/WaitForElectronBackendLogin.ts'
 
 export interface LoginOptions {
@@ -21,8 +23,6 @@ export interface LoginResult {
 
 export const handleClickLogin = async (options: LoginOptions): Promise<LoginResult> => {
   const { authUseRedirect, backendUrl, platform } = options
-
-  console.log({ authUseRedirect, backendUrl })
   if (!backendUrl) {
     return {
       authErrorMessage: 'Backend URL is missing.',
@@ -50,9 +50,18 @@ export const handleClickLogin = async (options: LoginOptions): Promise<LoginResu
       }
       return getLoggedInState(signingInState, response)
     }
+    await clearStoredAuthError()
+    await clearPendingOidcTransaction()
     const uid = 0
-    const { codeVerifier, loginUrl, redirectUri } = await getBackendLoginRequest(backendUrl, platform, uid)
-    console.log({codeVerifier, loginUrl, redirectUri})
+    const { codeVerifier, loginUrl, redirectUri, state } = await getBackendLoginRequest(backendUrl, platform, uid)
+    if (platform !== PlatformType.Electron) {
+      await setPendingOidcTransaction({
+        backendUrl,
+        codeVerifier,
+        redirectUri,
+        state,
+      })
+    }
     await OpenerWorker.invoke('Open.openUrl', loginUrl, platform, authUseRedirect)
     const authState =
       platform === PlatformType.Electron
