@@ -49,10 +49,12 @@ export const handleClickLogin = async (options: LoginOptions): Promise<LoginResu
       return getLoggedInState(signingInState, response)
     }
     const uid = 0
-    const { loginUrl, redirectUri } = await getBackendLoginRequest(backendUrl, platform, uid)
+    const { codeVerifier, loginUrl, redirectUri } = await getBackendLoginRequest(backendUrl, platform, uid)
     await OpenerWorker.invoke('Open.openUrl', loginUrl, platform, authUseRedirect)
     const authState =
-      platform === PlatformType.Electron ? await waitForElectronBackendLogin(backendUrl, uid, redirectUri) : await waitForBackendLogin(backendUrl)
+      platform === PlatformType.Electron
+        ? await waitForElectronBackendLogin(backendUrl, uid, redirectUri, codeVerifier)
+        : await waitForBackendLogin(backendUrl)
     return {
       ...authState,
     }

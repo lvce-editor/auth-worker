@@ -1,9 +1,12 @@
 import { PlatformType } from '@lvce-editor/constants'
 import { RendererWorker } from '@lvce-editor/rpc-registry'
+import { createPkceValues } from '../CreatePkceValues/CreatePkceValues.ts'
 import { getBackendAuthUrl } from '../GetBackendAuthUrl/GetBackendAuthUrl.ts'
 import { errorHtml, successHtml } from '../OAuthCallbackHtml/OAuthCallbackHtml.ts'
+import { oidcClientId, oidcScope } from '../OidcConfig/OidcConfig.ts'
 
 export interface BackendLoginRequest {
+  readonly codeVerifier: string
   readonly loginUrl: string
   readonly redirectUri: string
 }
@@ -12,7 +15,7 @@ export const getElectronRedirectUri = async (
   uid: number,
   invoke: (method: string, ...params: readonly string[]) => Promise<number | string>,
 ): Promise<string> => {
-  return `http://localhost:${await invoke('OAuthServer.create', String(uid), successHtml, errorHtml)}`
+  return `http://127.0.0.1:${await invoke('OAuthServer.create', String(uid), successHtml, errorHtml)}/callback`
 }
 
 const getCurrentHref = async (): Promise<string> => {
@@ -38,12 +41,30 @@ const getEffectiveRedirectUri = async (platform: number, uid: number, redirectUr
 }
 
 export const getBackendLoginRequest = async (backendUrl: string, platform = 0, uid = 0, redirectUri = ''): Promise<BackendLoginRequest> => {
-  const loginUrl = new URL(getBackendAuthUrl(backendUrl, '/login'))
   const effectiveRedirectUri = await getEffectiveRedirectUri(platform, uid, redirectUri)
+  if (platform === PlatformType.Electron) {
+    const { codeChallenge, codeVerifier, nonce, state } = await createPkceValues()
+    const loginUrl = new URL(getBackendAuthUrl(backendUrl, '/oidc/auth'))
+    loginUrl.searchParams.set('client_id', oidcClientId)
+    loginUrl.searchParams.set('code_challenge', codeChallenge)
+    loginUrl.searchParams.set('code_challenge_method', 'S256')
+    loginUrl.searchParams.set('nonce', nonce)
+    loginUrl.searchParams.set('redirect_uri', effectiveRedirectUri)
+    loginUrl.searchParams.set('response_type', 'code')
+    loginUrl.searchParams.set('scope', oidcScope)
+    loginUrl.searchParams.set('state', state)
+    return {
+      codeVerifier,
+      loginUrl: loginUrl.toString(),
+      redirectUri: effectiveRedirectUri,
+    }
+  }
+  const loginUrl = new URL(getBackendAuthUrl(backendUrl, '/login'))
   if (effectiveRedirectUri) {
     loginUrl.searchParams.set('redirect_uri', effectiveRedirectUri)
   }
   return {
+    codeVerifier: '',
     loginUrl: loginUrl.toString(),
     redirectUri: effectiveRedirectUri,
   }
