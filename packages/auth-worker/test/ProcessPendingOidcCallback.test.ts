@@ -53,7 +53,7 @@ test('processPendingOidcCallback exchanges the authorization code using credenti
   expect(result).toBe(true)
   expect(fetchMock).toHaveBeenCalledTimes(1)
   expect(fetchMock).toHaveBeenCalledWith('https://backend.example/oidc/token', {
-    body: new URLSearchParams({
+    body: JSON.stringify({
       client_id: oidcClientId,
       code: 'code-1',
       code_verifier: 'verifier-1',
@@ -63,7 +63,7 @@ test('processPendingOidcCallback exchanges the authorization code using credenti
     credentials: 'include',
     headers: {
       Accept: 'application/json',
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/json',
     },
     method: 'POST',
   })

@@ -6,6 +6,14 @@ interface OidcTokenResponse {
   readonly error_description?: string
 }
 
+interface ExchangeElectronAuthorizationCodeRequest {
+  readonly client_id: string
+  readonly code: string
+  readonly code_verifier: string
+  readonly grant_type: 'authorization_code'
+  readonly redirect_uri: string
+}
+
 const getResponsePayload = async (response: Response): Promise<OidcTokenResponse | undefined> => {
   try {
     return (await response.json()) as OidcTokenResponse
@@ -30,18 +38,19 @@ export const exchangeElectronAuthorizationCode = async (
   codeVerifier: string,
   redirectUri: string,
 ): Promise<void> => {
+  const request: ExchangeElectronAuthorizationCodeRequest = {
+    client_id: oidcClientId,
+    code,
+    code_verifier: codeVerifier,
+    grant_type: 'authorization_code',
+    redirect_uri: redirectUri,
+  }
   const response = await fetch(getBackendOidcTokenUrl(backendUrl), {
-    body: new URLSearchParams({
-      client_id: oidcClientId,
-      code,
-      code_verifier: codeVerifier,
-      grant_type: 'authorization_code',
-      redirect_uri: redirectUri,
-    }),
+    body: JSON.stringify(request),
     credentials: 'include',
     headers: {
       Accept: 'application/json',
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/json',
     },
     method: 'POST',
   })
