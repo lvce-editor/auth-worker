@@ -48,6 +48,7 @@
     "@lvce-editor/rpc": "^6.4.0",
     "@lvce-editor/rpc-registry": "^9.17.0",
     "jest": "^30.3.0",
+    "oauth4webapi": "^3.8.5",
     "ts-jest": "^29.4.9"
   }
 }
