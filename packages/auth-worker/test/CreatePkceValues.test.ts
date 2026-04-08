@@ -10,6 +10,6 @@ test('createPkceValues returns oauth-compatible pkce values', async () => {
 
   expect(result.codeChallenge).toBe(await oauth.calculatePKCECodeChallenge(result.codeVerifier))
   expect(result.codeVerifier).toHaveLength(43)
-  expect(result.nonce).toHaveLength(32)
-  expect(result.state).toHaveLength(32)
+  expect(result.nonce).toMatch(/^[A-Za-z0-9_-]{43}$/)
+  expect(result.state).toMatch(/^[A-Za-z0-9_-]{43}$/)
 })
