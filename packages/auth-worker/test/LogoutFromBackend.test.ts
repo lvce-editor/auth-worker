@@ -17,10 +17,11 @@ afterEach(() => {
 
 test('logoutFromBackend does nothing when backend url is empty', async () => {
   const fetchCalls: unknown[] = []
-  setFetch((async (...args: readonly unknown[]): Promise<Response> => {
+  const mockFetch: typeof fetch = async (...args: readonly [input: RequestInfo | URL, init?: RequestInit]) => {
     fetchCalls.push(args)
-    return {} as Response
-  }) as typeof fetch)
+    return new Response()
+  }
+  setFetch(mockFetch)
 
   await expect(logoutFromBackend('')).resolves.toBeUndefined()
 
@@ -29,10 +30,11 @@ test('logoutFromBackend does nothing when backend url is empty', async () => {
 
 test('logoutFromBackend posts to the backend logout endpoint', async () => {
   const fetchCalls: unknown[] = []
-  setFetch((async (...args: readonly unknown[]): Promise<Response> => {
+  const mockFetch: typeof fetch = async (...args: readonly [input: RequestInfo | URL, init?: RequestInit]) => {
     fetchCalls.push(args)
-    return {} as Response
-  }) as typeof fetch)
+    return new Response()
+  }
+  setFetch(mockFetch)
 
   await expect(logoutFromBackend('https://api.example.com///')).resolves.toBeUndefined()
 
@@ -52,10 +54,11 @@ test('logoutFromBackend posts to the backend logout endpoint', async () => {
 
 test('logoutFromBackend ignores fetch failures', async () => {
   const fetchCalls: unknown[] = []
-  setFetch((async (...args: readonly unknown[]): Promise<Response> => {
+  const mockFetch: typeof fetch = async (...args: readonly [input: RequestInfo | URL, init?: RequestInit]) => {
     fetchCalls.push(args)
     throw new Error('network error')
-  }) as typeof fetch)
+  }
+  setFetch(mockFetch)
 
   await expect(logoutFromBackend('https://api.example.com')).resolves.toBeUndefined()
 
