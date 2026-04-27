@@ -1,6 +1,6 @@
 import { expect, test } from '@jest/globals'
-const { getElectronRedirectUri } = await import('../src/parts/GetElectronRedirectUri/GetElectronRedirectUri.ts')
-const { errorHtml, successHtml } = await import('../src/parts/OAuthCallbackHtml/OAuthCallbackHtml.ts')
+import { getElectronRedirectUri } from '../src/parts/GetElectronRedirectUri/GetElectronRedirectUri.ts'
+import { errorHtml, successHtml } from '../src/parts/OAuthCallbackHtml/OAuthCallbackHtml.ts'
 
 test('getElectronRedirectUri uses configured auth callback html for electron oauth server', async () => {
   const invocations: string[][] = []
