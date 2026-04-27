@@ -2,8 +2,20 @@ import { exchangeElectronAuthorizationCode } from '../ExchangeElectronAuthorizat
 import { clearPendingOidcTransaction, getPendingOidcTransaction } from '../PendingOidcTransaction/PendingOidcTransaction.ts'
 import { clearStoredAuthError, setStoredAuthError } from '../StoredAuthError/StoredAuthError.ts'
 
-export const processPendingOidcCallback = async (href: string): Promise<boolean> => {
-  const callbackUrl = new URL(href)
+const getCallbackUrl = async (): Promise<URL | undefined> => {
+  const href = await getCurrentHref()
+  if (!href) {
+    return undefined
+  }
+  try {
+    return new URL(href)
+  } catch {
+    return undefined
+  }
+}
+
+export const processPendingOidcCallback = async (): Promise<boolean> => {
+  const callbackUrl = await getCallbackUrl()
   if (!callbackUrl) {
     return false
   }
@@ -17,6 +29,7 @@ export const processPendingOidcCallback = async (href: string): Promise<boolean>
   const transaction = await getPendingOidcTransaction()
   await clearPendingOidcTransaction()
   if (!transaction) {
+    await setStoredAuthError('Backend authentication failed: missing OIDC transaction.')
     return false
   }
   if (error) {
