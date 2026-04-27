@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/prefer-readonly-parameter-types */
 import { afterEach, expect, test } from '@jest/globals'
 import { logoutFromBackend } from '../src/parts/LogoutFromBackend/LogoutFromBackend.ts'
 
