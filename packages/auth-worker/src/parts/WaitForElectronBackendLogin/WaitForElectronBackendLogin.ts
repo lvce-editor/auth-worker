@@ -3,7 +3,7 @@ import type { LoginResult } from '../HandleClickLogin/HandleClickLogin.ts'
 import { delay } from '../Delay/Delay.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 
-const hasAuthorizationCode = (value: unknown): boolean => {
+const hasAuthorizationCode = (value: unknown): value is string => {
   return typeof value === 'string' && value.length > 0
 }
 
