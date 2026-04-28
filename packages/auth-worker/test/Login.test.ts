@@ -19,6 +19,7 @@ test('getLoggedInState applies login response values', () => {
   const state = {
     authAccessToken: '',
     authErrorMessage: 'previous error',
+    authRefreshToken: '',
     userName: 'before',
     userState: 'loggingIn',
     userSubscriptionPlan: 'free',
@@ -27,6 +28,7 @@ test('getLoggedInState applies login response values', () => {
 
   const response: LoginResponse = {
     accessToken: 'token-1',
+    refreshToken: 'refresh-token-1',
     subscriptionPlan: 'pro',
     usedTokens: 42,
     userName: 'after',
@@ -35,6 +37,7 @@ test('getLoggedInState applies login response values', () => {
   expect(getLoggedInState(state, response)).toEqual({
     authAccessToken: 'token-1',
     authErrorMessage: '',
+    authRefreshToken: 'refresh-token-1',
     userName: 'after',
     userState: 'loggedIn',
     userSubscriptionPlan: 'pro',
@@ -46,6 +49,7 @@ test('getLoggedInState falls back when response values are invalid', () => {
   const state = {
     authAccessToken: '',
     authErrorMessage: '',
+    authRefreshToken: '',
     userName: 'before',
     userState: 'loggingIn',
     userSubscriptionPlan: 'free',
@@ -54,6 +58,7 @@ test('getLoggedInState falls back when response values are invalid', () => {
 
   const response = {
     accessToken: 1,
+    refreshToken: false,
     subscriptionPlan: false,
     usedTokens: '2',
     userName: undefined,
@@ -62,6 +67,7 @@ test('getLoggedInState falls back when response values are invalid', () => {
   expect(getLoggedInState(state, response)).toEqual({
     authAccessToken: '',
     authErrorMessage: '',
+    authRefreshToken: '',
     userName: 'before',
     userState: 'loggedOut',
     userSubscriptionPlan: 'free',

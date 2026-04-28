@@ -7,6 +7,7 @@ export const toBackendAuthState = (value: BackendAuthResponse): LoginResult => {
   return {
     authAccessToken: getString(value.accessToken),
     authErrorMessage: getString(value.error),
+    authRefreshToken: getString(value.refreshToken),
     userName: getString(value.userName),
     userState: value.accessToken ? 'loggedIn' : 'loggedOut',
     userSubscriptionPlan: getString(value.subscriptionPlan),
