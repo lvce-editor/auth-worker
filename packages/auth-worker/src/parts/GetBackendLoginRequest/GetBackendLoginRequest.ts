@@ -16,7 +16,7 @@ export const getBackendLoginRequest = async (
   platform = 0,
   uid = 0,
   redirectUri = '',
-  createPkceValuesFn = createPkceValues,
+  createPkceValuesFn: () => Promise<{ codeChallenge: string; codeVerifier: string }> = createPkceValues,
   createRandomUuid: () => string = () => globalThis.crypto.randomUUID(),
 ): Promise<BackendLoginRequest> => {
   const effectiveRedirectUri = await getEffectiveRedirectUri(platform, uid, redirectUri)
