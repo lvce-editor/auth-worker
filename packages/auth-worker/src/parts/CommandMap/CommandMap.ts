@@ -1,3 +1,4 @@
+import { RpcId } from '@lvce-editor/constants'
 import { handleMessagePort } from '../HandleMessagePort/HandleMessagePort.ts'
 import { initialize } from '../Initialize/Initialize.ts'
 import { handleClickLogin } from '../Login/Login.ts'
@@ -26,5 +27,5 @@ export const commandMap = {
   'Auth.setNextRefreshResponse': setNextRefreshResponse,
   'Auth.syncBackendAuth': syncBackendAuth,
   'HandleMessagePort.handleMessagePort': handleMessagePort,
-  initialize: (_: string, port: MessagePort): Promise<void> => handleMessagePort(port),
+  initialize: (_: string, port: MessagePort): Promise<void> => handleMessagePort(port, RpcId.RendererWorker),
 }

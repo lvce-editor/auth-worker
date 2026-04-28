@@ -2,9 +2,9 @@ import { LazyTransferMessagePortRpcParent } from '@lvce-editor/rpc'
 import { AuthProcess, RendererWorker } from '@lvce-editor/rpc-registry'
 
 const sendMessagePortToAuthProcess = async (port: MessagePort): Promise<void> => {
-  await RendererWorker.sendMessagePortToSharedProcess(
+  await RendererWorker.invokeAndTransfer(
+    'SendMessagePortToExtensionHostWorker.sendMessagePortToSharedProcess',
     port,
-    // @ts-ignore
     'HandleMessagePortForAuthProcess.handleMessagePortForAuthProcess',
   )
 }
