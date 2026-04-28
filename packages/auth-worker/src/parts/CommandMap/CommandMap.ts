@@ -26,4 +26,5 @@ export const commandMap = {
   'Auth.setNextRefreshResponse': setNextRefreshResponse,
   'Auth.syncBackendAuth': syncBackendAuth,
   'HandleMessagePort.handleMessagePort': handleMessagePort,
+  initialize: (_: string, port: MessagePort): Promise<void> => handleMessagePort(port),
 }
