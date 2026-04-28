@@ -1,11 +1,6 @@
-<<<<<<< HEAD
-import { createUrl } from '../CreateUrl/CreateUrl.ts'
-=======
-// cspell:ignore pkce
-
 import { createPkceValues } from '../CreatePkceValues/CreatePkceValues.ts'
+// cspell:ignore pkce
 import { getBackendAuthUrl } from '../GetBackendAuthUrl/GetBackendAuthUrl.ts'
->>>>>>> origin/main
 import { getEffectiveRedirectUri } from '../GetEffectiveRedirectUri/GetEffectiveRedirectUri.ts'
 import { oidcClientId, oidcScope } from '../OidcConfig/OidcConfig.ts'
 
@@ -24,18 +19,6 @@ export const getBackendLoginRequest = async (
   createRandomUuid: () => string = () => globalThis.crypto.randomUUID(),
 ): Promise<BackendLoginRequest> => {
   const effectiveRedirectUri = await getEffectiveRedirectUri(platform, uid, redirectUri)
-<<<<<<< HEAD
-  return {
-    loginUrl: createUrl({
-      baseUrl: backendUrl,
-      params: effectiveRedirectUri
-        ? {
-            redirect_uri: effectiveRedirectUri,
-          }
-        : {},
-      path: '/login',
-    }),
-=======
   const { codeChallenge, codeVerifier } = await createPkceValuesFn()
   const loginUrl = new URL(getBackendAuthUrl(backendUrl, '/oidc/auth'))
   loginUrl.searchParams.set('client_id', oidcClientId)
@@ -52,7 +35,6 @@ export const getBackendLoginRequest = async (
   return {
     codeVerifier,
     loginUrl: loginUrl.toString(),
->>>>>>> origin/main
     redirectUri: effectiveRedirectUri,
   }
 }
