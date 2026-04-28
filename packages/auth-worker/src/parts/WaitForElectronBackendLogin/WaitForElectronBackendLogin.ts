@@ -1,30 +1,33 @@
 import { AuthProcess } from '@lvce-editor/rpc-registry'
 import type { LoginResult } from '../HandleClickLogin/HandleClickLogin.ts'
 import { delay } from '../Delay/Delay.ts'
-import { exchangeElectronAuthorizationCode } from '../ExchangeElectronAuthorizationCode/ExchangeElectronAuthorizationCode.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
-import { waitForBackendLogin } from '../WaitForBackendLogin/WaitForBackendLogin.ts'
 
-const hasAuthorizationCode = (value: unknown): boolean => {
+const hasAuthorizationCode = (value: unknown): value is string => {
   return typeof value === 'string' && value.length > 0
 }
 
+const getElectronAuthorizationCode = async (uid: number): Promise<unknown> => {
+  return AuthProcess.invoke('OAuthServer.getCode', String(uid))
+}
+
 export const waitForElectronBackendLogin = async (
-  backendUrl: string,
   uid: number,
-  redirectUri: string,
+  codeVerifier: string,
   timeoutMs = 30_000,
   pollIntervalMs = 1000,
+  getAuthorizationCode: (uid: number) => Promise<unknown> = getElectronAuthorizationCode,
 ): Promise<LoginResult> => {
-  const started = Date.now()
-  const deadline = started + timeoutMs
+  const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
-    const authorizationCode = await AuthProcess.invoke('OAuthServer.getCode', String(uid))
+    const authorizationCode = await getAuthorizationCode(uid)
     if (hasAuthorizationCode(authorizationCode)) {
-      const elapsed = Date.now() - started
-      const remainingTime = Math.max(0, timeoutMs - elapsed)
-      await exchangeElectronAuthorizationCode(backendUrl, authorizationCode, redirectUri)
-      return waitForBackendLogin(backendUrl, remainingTime, pollIntervalMs)
+      return {
+        authCode: authorizationCode,
+        authCodeVerifier: codeVerifier,
+        authErrorMessage: '',
+        userState: 'loggedOut',
+      }
     }
     await delay(pollIntervalMs)
   }
