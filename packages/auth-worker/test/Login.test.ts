@@ -1,7 +1,10 @@
 import { expect, test } from '@jest/globals'
 import type { LoginResponse } from '../src/parts/LoginResponse/LoginResponse.ts'
 import { getLoggedInState } from '../src/parts/GetLoggedInState/GetLoggedInState.ts'
+import { handleClickLogin } from '../src/parts/HandleClickLogin/HandleClickLogin.ts'
 import { isLoginResponse } from '../src/parts/IsLoginResponse/IsLoginResponse.ts'
+import * as MockBackendAuth from '../src/parts/MockBackendAuth/MockBackendAuth.ts'
+import { clearPersistentAuthValue, getPersistentAuthValue } from '../src/parts/PersistentAuthValue/PersistentAuthValue.ts'
 
 test('isLoginResponse returns false for null', () => {
   expect(isLoginResponse(null)).toBe(false)
@@ -73,4 +76,39 @@ test('getLoggedInState falls back when response values are invalid', () => {
     userSubscriptionPlan: 'free',
     userUsedTokens: 1,
   })
+})
+
+test('handleClickLogin stores access token and refresh token after successful login', async () => {
+  MockBackendAuth.clear()
+  await clearPersistentAuthValue('accessToken')
+  await clearPersistentAuthValue('refreshToken')
+  MockBackendAuth.setNextLoginResponse({
+    delay: 0,
+    response: {
+      accessToken: 'token-1',
+      refreshToken: 'refresh-token-1',
+    },
+    type: 'success',
+  })
+
+  const result = await handleClickLogin({
+    backendUrl: 'https://api.example.com',
+    platform: 0,
+  })
+
+  expect(result).toEqual({
+    authAccessToken: 'token-1',
+    authErrorMessage: '',
+    authRefreshToken: 'refresh-token-1',
+    userName: undefined,
+    userState: 'loggedIn',
+    userSubscriptionPlan: undefined,
+    userUsedTokens: undefined,
+  })
+  expect(await getPersistentAuthValue('accessToken')).toBe('token-1')
+  expect(await getPersistentAuthValue('refreshToken')).toBe('refresh-token-1')
+
+  MockBackendAuth.clear()
+  await clearPersistentAuthValue('accessToken')
+  await clearPersistentAuthValue('refreshToken')
 })

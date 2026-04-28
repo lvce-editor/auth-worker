@@ -5,7 +5,17 @@ import { getBackendLoginRequest } from '../GetBackendLoginRequest/GetBackendLogi
 import { getLoggedInState } from '../GetLoggedInState/GetLoggedInState.ts'
 import { isLoginResponse } from '../IsLoginResponse/IsLoginResponse.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
+import { setPersistentAuthValue } from '../PersistentAuthValue/PersistentAuthValue.ts'
 import { waitForElectronBackendLogin } from '../WaitForElectronBackendLogin/WaitForElectronBackendLogin.ts'
+
+const persistLoginResult = async (loginResult: LoginResult): Promise<LoginResult> => {
+  if (loginResult.userState !== 'loggedIn') {
+    return loginResult
+  }
+  await setPersistentAuthValue('accessToken', loginResult.authAccessToken ?? '')
+  await setPersistentAuthValue('refreshToken', loginResult.authRefreshToken ?? '')
+  return loginResult
+}
 
 export interface LoginOptions {
   readonly authUseRedirect?: boolean
@@ -49,7 +59,7 @@ export const handleClickLogin = async (options: LoginOptions): Promise<LoginResu
           userState: 'loggedOut',
         }
       }
-      return getLoggedInState(signingInState, response)
+      return persistLoginResult(getLoggedInState(signingInState, response))
     }
     const uid = 0
     const { codeVerifier, loginUrl, redirectUri } = await getBackendLoginRequest(backendUrl, platform, uid)
@@ -58,9 +68,7 @@ export const handleClickLogin = async (options: LoginOptions): Promise<LoginResu
       platform === PlatformType.Electron
         ? await waitForElectronBackendLogin(backendUrl, uid, redirectUri, codeVerifier)
         : await waitForBackendLogin(backendUrl)
-    return {
-      ...authState,
-    }
+    return persistLoginResult(authState)
   } catch (error) {
     const errorMessage = error instanceof Error && error.message ? error.message : 'Backend authentication failed.'
     return {
