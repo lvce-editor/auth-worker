@@ -1,16 +1,14 @@
-import { expect, jest, test } from '@jest/globals'
+import { afterEach, expect, jest, test } from '@jest/globals'
+import { AuthProcess } from '@lvce-editor/rpc-registry'
+import { waitForElectronBackendLogin } from '../src/parts/WaitForElectronBackendLogin/WaitForElectronBackendLogin.ts'
 
-const mockInvoke = jest.fn(async () => 'auth-code-1')
-
-jest.unstable_mockModule('@lvce-editor/rpc-registry', () => ({
-  AuthProcess: {
-    invoke: mockInvoke,
-  },
-}))
-
-const { waitForElectronBackendLogin } = await import('../src/parts/WaitForElectronBackendLogin/WaitForElectronBackendLogin.ts')
+afterEach(() => {
+  jest.restoreAllMocks()
+})
 
 test('waitForElectronBackendLogin returns the authorization code and code verifier when the callback arrives', async () => {
+  const mockInvoke = jest.spyOn(AuthProcess, 'invoke').mockResolvedValue('auth-code-1' as never)
+
   const result = await waitForElectronBackendLogin(7, 'verifier-1', 100, 1)
 
   expect(result).toEqual({

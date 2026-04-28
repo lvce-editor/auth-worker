@@ -1,19 +1,21 @@
 // cspell:ignore pkce
 
-import { expect, jest, test } from '@jest/globals'
+import { afterEach, expect, jest, test } from '@jest/globals'
+import { AuthProcess } from '@lvce-editor/rpc-registry'
+import * as CreatePkceValues from '../src/parts/CreatePkceValues/CreatePkceValues.ts'
+import { getBackendLoginRequest } from '../src/parts/GetBackendLoginRequest/GetBackendLoginRequest.ts'
+import { getElectronRedirectUri } from '../src/parts/GetElectronRedirectUri/GetElectronRedirectUri.ts'
+import { errorHtml, successHtml } from '../src/parts/OAuthCallbackHtml/OAuthCallbackHtml.ts'
 
-const mockCreatePkceValues = jest.fn(async () => ({
-  codeChallenge: 'challenge-1',
-  codeVerifier: 'verifier-1',
-}))
-
-jest.unstable_mockModule('../src/parts/CreatePkceValues/CreatePkceValues.ts', () => ({
-  createPkceValues: mockCreatePkceValues,
-}))
-
-const { getBackendLoginRequest } = await import('../src/parts/GetBackendLoginRequest/GetBackendLoginRequest.ts')
+afterEach(() => {
+  jest.restoreAllMocks()
+})
 
 test('getBackendLoginRequest creates an oidc authorize url with pkce parameters', async () => {
+  const mockCreatePkceValues = jest.spyOn(CreatePkceValues, 'createPkceValues').mockResolvedValue({
+    codeChallenge: 'challenge-1',
+    codeVerifier: 'verifier-1',
+  })
   const originalCrypto = globalThis.crypto
   const mockCrypto = {
     randomUUID: jest.fn(() => 'uuid-1'),
@@ -40,14 +42,11 @@ test('getBackendLoginRequest creates an oidc authorize url with pkce parameters'
   }
 })
 
-import { getElectronRedirectUri } from '../src/parts/GetElectronRedirectUri/GetElectronRedirectUri.ts'
-import { errorHtml, successHtml } from '../src/parts/OAuthCallbackHtml/OAuthCallbackHtml.ts'
-
-test.skip('getElectronRedirectUri uses configured auth callback html for electron oauth server', async () => {
-  const invocations: string[][] = []
+test('getElectronRedirectUri uses configured auth callback html for electron oauth server', async () => {
+  const mockInvoke = jest.spyOn(AuthProcess, 'invoke').mockResolvedValue('3210' as never)
 
   const result = await getElectronRedirectUri(7)
 
   expect(result).toBe('http://localhost:3210/callback')
-  expect(invocations).toEqual([['OAuthServer.create', '7', successHtml, errorHtml]])
+  expect(mockInvoke).toHaveBeenCalledWith('OAuthServer.create', '7', successHtml, errorHtml)
 })
