@@ -18,6 +18,7 @@ export interface LoginResult {
   readonly authCode?: string
   readonly authCodeVerifier?: string
   readonly authErrorMessage: string
+  readonly authRefreshToken?: string
   readonly userState: 'loggedOut' | 'loggingIn' | 'loggedIn'
 }
 
@@ -51,10 +52,12 @@ export const handleClickLogin = async (options: LoginOptions): Promise<LoginResu
       return getLoggedInState(signingInState, response)
     }
     const uid = 0
-    const { codeVerifier, loginUrl } = await getBackendLoginRequest(backendUrl, platform, uid)
+    const { codeVerifier, loginUrl, nonce, redirectUri } = await getBackendLoginRequest(backendUrl, platform, uid)
     await OpenerWorker.invoke('Open.openUrl', loginUrl, platform, authUseRedirect)
     const authState =
-      platform === PlatformType.Electron ? await waitForElectronBackendLogin(uid, codeVerifier) : await waitForBackendLogin(backendUrl)
+      platform === PlatformType.Electron
+        ? await waitForElectronBackendLogin(backendUrl, uid, redirectUri, nonce, codeVerifier)
+        : await waitForBackendLogin(backendUrl)
     return {
       ...authState,
     }
