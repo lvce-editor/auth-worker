@@ -7,8 +7,8 @@ export interface BackendLoginRequest {
 }
 
 export const getBackendLoginRequest = async (backendUrl: string, platform = 0, uid = 0, redirectUri = ''): Promise<BackendLoginRequest> => {
-  const loginUrl = new URL(getBackendAuthUrl(backendUrl, '/login'))
   const effectiveRedirectUri = await getEffectiveRedirectUri(platform, uid, redirectUri)
+  const loginUrl = new URL(getBackendAuthUrl(backendUrl, '/login'))
   if (effectiveRedirectUri) {
     loginUrl.searchParams.set('redirect_uri', effectiveRedirectUri)
   }
