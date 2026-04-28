@@ -1,6 +1,5 @@
-// cspell:ignore pkce
-
 import { createPkceValues } from '../CreatePkceValues/CreatePkceValues.ts'
+// cspell:ignore pkce
 import { getBackendAuthUrl } from '../GetBackendAuthUrl/GetBackendAuthUrl.ts'
 import { getEffectiveRedirectUri } from '../GetEffectiveRedirectUri/GetEffectiveRedirectUri.ts'
 import { oidcClientId, oidcScope } from '../OidcConfig/OidcConfig.ts'
