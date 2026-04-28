@@ -10,49 +10,43 @@ import {
 test('exchangeElectronAuthorizationCode sends the oidc token exchange and returns tokens', async () => {
   const requestCalls: Array<{
     authorizationServer: oauth.AuthorizationServer
-    callbackParameters: URLSearchParams
     client: oauth.Client
-    codeVerifier: string
-    redirectUri: string
+    grantType: string
+    parameters: URLSearchParams
   }> = []
   const processCalls: Array<{
     authorizationServer: oauth.AuthorizationServer
     client: oauth.Client
-    options: oauth.ProcessAuthorizationCodeResponseOptions | undefined
   }> = []
   const response = new Response('{}')
-  const requestAuthorizationCodeGrant = (async (...args: readonly unknown[]) => {
-    const [authorizationServer, client, _clientAuthentication, callbackParameters, redirectUri, codeVerifier] = args as Parameters<
-      typeof oauth.authorizationCodeGrantRequest
-    >
+  const requestTokenEndpoint = (async (...args: readonly unknown[]) => {
+    const [authorizationServer, client, _clientAuthentication, grantType, parameters] = args as Parameters<typeof oauth.genericTokenEndpointRequest>
     requestCalls.push({
       authorizationServer,
-      callbackParameters,
       client,
-      codeVerifier: typeof codeVerifier === 'string' ? codeVerifier : 'pkce-disabled',
-      redirectUri,
+      grantType,
+      parameters: parameters instanceof URLSearchParams ? parameters : new URLSearchParams(parameters),
     })
     return response
-  }) as typeof oauth.authorizationCodeGrantRequest
-  const processAuthorizationCodeGrantResponse = (async (...args: readonly unknown[]): Promise<oauth.TokenEndpointResponse> => {
-    const [authorizationServer, client, actualResponse, options] = args as Parameters<typeof oauth.processAuthorizationCodeResponse>
+  }) as typeof oauth.genericTokenEndpointRequest
+  const processTokenEndpointResponse = (async (...args: readonly unknown[]): Promise<oauth.TokenEndpointResponse> => {
+    const [authorizationServer, client, actualResponse] = args as Parameters<typeof oauth.processGenericTokenEndpointResponse>
     expect(actualResponse).toBe(response)
-    processCalls.push({ authorizationServer, client, options })
+    processCalls.push({ authorizationServer, client })
     return {
       access_token: 'access-token-1',
       refresh_token: 'refresh-token-1',
       token_type: 'bearer',
     }
-  }) as typeof oauth.processAuthorizationCodeResponse
+  }) as typeof oauth.processGenericTokenEndpointResponse
 
   const result = await exchangeElectronAuthorizationCode(
     'https://api.example.com/',
     'auth-code-1',
     'http://localhost:43123/callback',
     'verifier-1',
-    'nonce-1',
-    requestAuthorizationCodeGrant,
-    processAuthorizationCodeGrantResponse,
+    requestTokenEndpoint,
+    processTokenEndpointResponse,
   )
 
   expect(result).toEqual({
@@ -66,12 +60,15 @@ test('exchangeElectronAuthorizationCode sends the oidc token exchange and return
         jwks_uri: 'https://api.example.com/oidc/jwks',
         token_endpoint: 'https://api.example.com/oidc/token',
       },
-      callbackParameters: new URLSearchParams({ code: 'auth-code-1' }),
       client: {
         client_id: 'lvce-editor-native',
       },
-      codeVerifier: 'verifier-1',
-      redirectUri: 'http://localhost:43123/callback',
+      grantType: 'authorization_code',
+      parameters: new URLSearchParams({
+        code: 'auth-code-1',
+        code_verifier: 'verifier-1',
+        redirect_uri: 'http://localhost:43123/callback',
+      }),
     },
   ])
   expect(processCalls).toEqual([
@@ -83,9 +80,6 @@ test('exchangeElectronAuthorizationCode sends the oidc token exchange and return
       },
       client: {
         client_id: 'lvce-editor-native',
-      },
-      options: {
-        expectedNonce: 'nonce-1',
       },
     },
   ])

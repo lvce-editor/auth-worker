@@ -27,23 +27,23 @@ export const exchangeElectronAuthorizationCode = async (
   code: string,
   redirectUri: string,
   codeVerifier: string,
-  nonce: string,
-  requestAuthorizationCodeGrant: typeof oauth.authorizationCodeGrantRequest = oauth.authorizationCodeGrantRequest,
-  processAuthorizationCodeGrantResponse: typeof oauth.processAuthorizationCodeResponse = oauth.processAuthorizationCodeResponse,
+  requestTokenEndpoint: typeof oauth.genericTokenEndpointRequest = oauth.genericTokenEndpointRequest,
+  processTokenEndpointResponse: typeof oauth.processGenericTokenEndpointResponse = oauth.processGenericTokenEndpointResponse,
 ): Promise<ExchangeElectronAuthorizationCodeResult> => {
   const authorizationServer = getAuthorizationServer(backendUrl)
   const client = getClient()
-  const response = await requestAuthorizationCodeGrant(
+  const response = await requestTokenEndpoint(
     authorizationServer,
     client,
     oauth.None(),
-    new URLSearchParams({ code }),
-    redirectUri,
-    codeVerifier,
+    'authorization_code',
+    new URLSearchParams({
+      code,
+      code_verifier: codeVerifier,
+      redirect_uri: redirectUri,
+    }),
   )
-  const tokenResponse = await processAuthorizationCodeGrantResponse(authorizationServer, client, response, {
-    expectedNonce: nonce,
-  })
+  const tokenResponse = await processTokenEndpointResponse(authorizationServer, client, response)
   return {
     accessToken: tokenResponse.access_token,
     refreshToken: typeof tokenResponse.refresh_token === 'string' ? tokenResponse.refresh_token : '',
