@@ -1,3 +1,5 @@
+// cspell:ignore pkce
+
 import { createPkceValues } from '../CreatePkceValues/CreatePkceValues.ts'
 import { getBackendAuthUrl } from '../GetBackendAuthUrl/GetBackendAuthUrl.ts'
 import { getEffectiveRedirectUri } from '../GetEffectiveRedirectUri/GetEffectiveRedirectUri.ts'
@@ -9,18 +11,25 @@ export interface BackendLoginRequest {
   readonly redirectUri: string
 }
 
-export const getBackendLoginRequest = async (backendUrl: string, platform = 0, uid = 0, redirectUri = ''): Promise<BackendLoginRequest> => {
+export const getBackendLoginRequest = async (
+  backendUrl: string,
+  platform = 0,
+  uid = 0,
+  redirectUri = '',
+  createPkceValuesFn = createPkceValues,
+  createRandomUuid: () => string = () => globalThis.crypto.randomUUID(),
+): Promise<BackendLoginRequest> => {
   const effectiveRedirectUri = await getEffectiveRedirectUri(platform, uid, redirectUri)
-  const { codeChallenge, codeVerifier } = await createPkceValues()
+  const { codeChallenge, codeVerifier } = await createPkceValuesFn()
   const loginUrl = new URL(getBackendAuthUrl(backendUrl, '/oidc/auth'))
   loginUrl.searchParams.set('client_id', oidcClientId)
   loginUrl.searchParams.set('code_challenge', codeChallenge)
   loginUrl.searchParams.set('code_challenge_method', 'S256')
-  loginUrl.searchParams.set('nonce', globalThis.crypto.randomUUID())
+  loginUrl.searchParams.set('nonce', createRandomUuid())
   loginUrl.searchParams.set('prompt', 'consent')
   loginUrl.searchParams.set('response_type', 'code')
   loginUrl.searchParams.set('scope', oidcScope)
-  loginUrl.searchParams.set('state', globalThis.crypto.randomUUID())
+  loginUrl.searchParams.set('state', createRandomUuid())
   if (effectiveRedirectUri) {
     loginUrl.searchParams.set('redirect_uri', effectiveRedirectUri)
   }

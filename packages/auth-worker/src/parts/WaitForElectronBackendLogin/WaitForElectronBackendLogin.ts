@@ -7,15 +7,20 @@ const hasAuthorizationCode = (value: unknown): boolean => {
   return typeof value === 'string' && value.length > 0
 }
 
+const getElectronAuthorizationCode = async (uid: number): Promise<unknown> => {
+  return AuthProcess.invoke('OAuthServer.getCode', String(uid))
+}
+
 export const waitForElectronBackendLogin = async (
   uid: number,
   codeVerifier: string,
   timeoutMs = 30_000,
   pollIntervalMs = 1000,
+  getAuthorizationCode: (uid: number) => Promise<unknown> = getElectronAuthorizationCode,
 ): Promise<LoginResult> => {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
-    const authorizationCode = await AuthProcess.invoke('OAuthServer.getCode', String(uid))
+    const authorizationCode = await getAuthorizationCode(uid)
     if (hasAuthorizationCode(authorizationCode)) {
       return {
         authCode: authorizationCode,
