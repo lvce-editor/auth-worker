@@ -3,5 +3,5 @@ import { errorHtml, successHtml } from '../OAuthCallbackHtml/OAuthCallbackHtml.t
 
 export const getElectronRedirectUri = async (uid: number): Promise<string> => {
   const localOauthServerPort = await AuthProcess.invoke('OAuthServer.create', String(uid), successHtml, errorHtml)
-  return `http://localhost:${localOauthServerPort}`
+  return `http://localhost:${localOauthServerPort}/callback`
 }
