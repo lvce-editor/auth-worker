@@ -1,4 +1,4 @@
-import { RendererWorker } from '@lvce-editor/rpc-registry'
+import { AuthProcess } from '@lvce-editor/rpc-registry'
 import type { LoginResult } from '../HandleClickLogin/HandleClickLogin.ts'
 import { delay } from '../Delay/Delay.ts'
 import { exchangeElectronAuthorizationCode } from '../ExchangeElectronAuthorizationCode/ExchangeElectronAuthorizationCode.ts'
@@ -19,7 +19,7 @@ export const waitForElectronBackendLogin = async (
   const started = Date.now()
   const deadline = started + timeoutMs
   while (Date.now() < deadline) {
-    const authorizationCode = await RendererWorker.invoke('OAuthServer.getCode', String(uid))
+    const authorizationCode = await AuthProcess.invoke('OAuthServer.getCode', String(uid))
     if (hasAuthorizationCode(authorizationCode)) {
       const elapsed = Date.now() - started
       const remainingTime = Math.max(0, timeoutMs - elapsed)
