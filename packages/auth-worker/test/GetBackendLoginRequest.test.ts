@@ -1,10 +1,15 @@
 // cspell:ignore pkce
 
 import { expect, test } from '@jest/globals'
+<<<<<<< HEAD
 import { PlatformType } from '@lvce-editor/constants'
 const { getBackendLoginRequest, getElectronRedirectUri } = await import('../src/parts/GetBackendLoginRequest/GetBackendLoginRequest.ts')
 const { oidcClientId, oidcScope } = await import('../src/parts/OidcConfig/OidcConfig.ts')
 const { errorHtml, successHtml } = await import('../src/parts/OAuthCallbackHtml/OAuthCallbackHtml.ts')
+=======
+import { getElectronRedirectUri } from '../src/parts/GetElectronRedirectUri/GetElectronRedirectUri.ts'
+import { errorHtml, successHtml } from '../src/parts/OAuthCallbackHtml/OAuthCallbackHtml.ts'
+>>>>>>> origin/main
 
 const statePattern = /^[A-Za-z0-9_-]{43}$/
 

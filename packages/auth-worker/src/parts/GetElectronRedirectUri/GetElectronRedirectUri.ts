@@ -4,5 +4,10 @@ export const getElectronRedirectUri = async (
   uid: number,
   invoke: (method: string, ...params: readonly string[]) => Promise<number | string>,
 ): Promise<string> => {
+<<<<<<< HEAD
   return `http://127.0.0.1:${await invoke('OAuthServer.create', String(uid), successHtml, errorHtml)}/callback`
+=======
+  const localOauthServerPort = await invoke('OAuthServer.create', String(uid), successHtml, errorHtml)
+  return `http://localhost:${localOauthServerPort}`
+>>>>>>> origin/main
 }
