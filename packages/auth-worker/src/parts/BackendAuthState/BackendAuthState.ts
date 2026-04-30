@@ -6,5 +6,6 @@ export interface BackendAuthState {
   readonly userName: string
   readonly userState: AuthUserState
   readonly userSubscriptionPlan: string
+  readonly userSubscriptionStatus: string
   readonly userUsedTokens: number
 }

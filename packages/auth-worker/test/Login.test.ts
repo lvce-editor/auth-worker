@@ -33,6 +33,7 @@ test('getLoggedInState applies login response values', () => {
     accessToken: 'token-1',
     refreshToken: 'refresh-token-1',
     subscriptionPlan: 'pro',
+    subscriptionStatus: 'active',
     usedTokens: 42,
     userName: 'after',
   }
@@ -44,6 +45,7 @@ test('getLoggedInState applies login response values', () => {
     userName: 'after',
     userState: 'loggedIn',
     userSubscriptionPlan: 'pro',
+    userSubscriptionStatus: 'active',
     userUsedTokens: 42,
   })
 })
@@ -63,6 +65,7 @@ test('getLoggedInState falls back when response values are invalid', () => {
     accessToken: 1,
     refreshToken: false,
     subscriptionPlan: false,
+    subscriptionStatus: false,
     usedTokens: '2',
     userName: undefined,
   } as unknown as LoginResponse
@@ -74,6 +77,7 @@ test('getLoggedInState falls back when response values are invalid', () => {
     userName: 'before',
     userState: 'loggedOut',
     userSubscriptionPlan: 'free',
+    userSubscriptionStatus: undefined,
     userUsedTokens: 1,
   })
 })
@@ -103,6 +107,7 @@ test('handleClickLogin stores access token and refresh token after successful lo
     userName: undefined,
     userState: 'loggedIn',
     userSubscriptionPlan: undefined,
+    userSubscriptionStatus: undefined,
     userUsedTokens: undefined,
   })
   expect(await getPersistentAuthValue('accessToken')).toBe('token-1')

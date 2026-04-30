@@ -3,6 +3,7 @@ export interface LoginResponse {
   readonly error?: string
   readonly refreshToken?: string
   readonly subscriptionPlan?: string
+  readonly subscriptionStatus?: string
   readonly usedTokens?: number
   readonly userName?: string
 }
