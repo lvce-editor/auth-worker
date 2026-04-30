@@ -1,8 +1,16 @@
-import type { LoginResult } from '../HandleClickLogin/HandleClickLogin.ts'
+import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
 import { getBackendRefreshUrl } from '../GetBackendRefreshUrl/GetBackendRefreshUrl.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
 import { parseBackendAuthResponse } from '../ParseBackendAuthResponse/ParseBackendAuthResponse.ts'
+
+const getPayload = async (response: Response): Promise<unknown> => {
+  try {
+    return await response.json()
+  } catch {
+    return undefined
+  }
+}
 
 export const syncBackendAuth = async (backendUrl: string): Promise<LoginResult> => {
   if (!backendUrl) {
@@ -23,12 +31,7 @@ export const syncBackendAuth = async (backendUrl: string): Promise<LoginResult> 
     if (response.status === 401 || response.status === 403) {
       return getLoggedOutBackendAuthState()
     }
-    let payload: unknown = undefined
-    try {
-      payload = await response.json()
-    } catch {
-      payload = undefined
-    }
+    const payload = await getPayload(response)
     if (!response.ok) {
       const parsed = parseBackendAuthResponse(payload)
       return getLoggedOutBackendAuthState(parsed.authErrorMessage || 'Backend authentication failed.')

@@ -1,5 +1,5 @@
 import { AuthProcess } from '@lvce-editor/rpc-registry'
-import type { LoginResult } from '../HandleClickLogin/HandleClickLogin.ts'
+import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
 import { delay } from '../Delay/Delay.ts'
 import { exchangeElectronAuthorizationCode } from '../ExchangeElectronAuthorizationCode/ExchangeElectronAuthorizationCode.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
