@@ -1,36 +1,13 @@
 import { PlatformType } from '@lvce-editor/constants'
 import { OpenerWorker } from '@lvce-editor/rpc-registry'
+import type { LoginOptions, LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
 import { getLoggedOutBackendAuthState, waitForBackendLogin } from '../BackendAuth/BackendAuth.ts'
 import { getBackendLoginRequest } from '../GetBackendLoginRequest/GetBackendLoginRequest.ts'
 import { getLoggedInState } from '../GetLoggedInState/GetLoggedInState.ts'
 import { isLoginResponse } from '../IsLoginResponse/IsLoginResponse.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
-import { setPersistentAuthValue } from '../PersistentAuthValue/PersistentAuthValue.ts'
+import { persistLoginResult } from '../PersistLoginResult/PersistLoginResult.ts'
 import { waitForElectronBackendLogin } from '../WaitForElectronBackendLogin/WaitForElectronBackendLogin.ts'
-
-const persistLoginResult = async (loginResult: LoginResult): Promise<LoginResult> => {
-  if (loginResult.userState !== 'loggedIn') {
-    return loginResult
-  }
-  await setPersistentAuthValue('accessToken', loginResult.authAccessToken ?? '')
-  await setPersistentAuthValue('refreshToken', loginResult.authRefreshToken ?? '')
-  return loginResult
-}
-
-export interface LoginOptions {
-  readonly authUseRedirect?: boolean
-  readonly backendUrl: string
-  readonly platform: number
-}
-
-export interface LoginResult {
-  readonly authAccessToken?: string
-  readonly authCode?: string
-  readonly authCodeVerifier?: string
-  readonly authErrorMessage: string
-  readonly authRefreshToken?: string
-  readonly userState: 'loggedOut' | 'loggingIn' | 'loggedIn'
-}
 
 export const handleClickLogin = async (options: LoginOptions): Promise<LoginResult> => {
   const { authUseRedirect, backendUrl, platform } = options
