@@ -1,5 +1,5 @@
 import type { BackendAuthResponse } from '../BackendAuthResponse/BackendAuthResponse.ts'
-import type { LoginResult } from '../HandleClickLogin/HandleClickLogin.ts'
+import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
 import { getNumber } from '../GetNumber/GetNumber.ts'
 import { getString } from '../GetString/GetString.ts'
 

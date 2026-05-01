@@ -1,4 +1,4 @@
-import type { LoginResult } from '../HandleClickLogin/HandleClickLogin.ts'
+import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
 import { delay } from '../Delay/Delay.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 import { syncBackendAuth } from '../SyncBackendAuth/SyncBackendAuth.ts'

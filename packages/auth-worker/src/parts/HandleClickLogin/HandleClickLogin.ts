@@ -1,11 +1,12 @@
 import { PlatformType } from '@lvce-editor/constants'
 import { OpenerWorker } from '@lvce-editor/rpc-registry'
+import type { LoginOptions, LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
 import { getLoggedOutBackendAuthState, waitForBackendLogin } from '../BackendAuth/BackendAuth.ts'
 import { getBackendLoginRequest } from '../GetBackendLoginRequest/GetBackendLoginRequest.ts'
 import { getLoggedInState } from '../GetLoggedInState/GetLoggedInState.ts'
 import { isLoginResponse } from '../IsLoginResponse/IsLoginResponse.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
-import { setPersistentAuthValue } from '../PersistentAuthValue/PersistentAuthValue.ts'
+import { persistLoginResult } from '../PersistLoginResult/PersistLoginResult.ts'
 import { waitForElectronBackendLogin } from '../WaitForElectronBackendLogin/WaitForElectronBackendLogin.ts'
 
 const persistLoginResult = async (loginResult: LoginResult): Promise<LoginResult> => {
