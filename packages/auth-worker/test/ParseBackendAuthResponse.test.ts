@@ -17,6 +17,7 @@ test('parseBackendAuthResponse normalizes valid backend auth responses', () => {
     error: 404,
     refreshToken: 'refresh-token-1',
     subscriptionPlan: 'pro',
+    subscriptionStatus: 'active',
     usedTokens: '7',
     userName: 'Ada',
   })
@@ -28,7 +29,31 @@ test('parseBackendAuthResponse normalizes valid backend auth responses', () => {
     userName: 'Ada',
     userState: 'loggedIn',
     userSubscriptionPlan: 'pro',
+    userSubscriptionStatus: 'active',
     userUsedTokens: 0,
+  })
+})
+
+test('parseBackendAuthResponse normalizes nested backend auth responses', () => {
+  const result = parseBackendAuthResponse({
+    accessToken: 'token-1',
+    subscriptionPlan: 'pro-plus',
+    subscriptionStatus: 'trialing',
+    usedTokens: 7,
+    user: {
+      displayName: 'Ada',
+    },
+  })
+
+  expect(result).toEqual({
+    authAccessToken: 'token-1',
+    authErrorMessage: '',
+    authRefreshToken: '',
+    userName: 'Ada',
+    userState: 'loggedIn',
+    userSubscriptionPlan: 'pro-plus',
+    userSubscriptionStatus: 'trialing',
+    userUsedTokens: 7,
   })
 })
 
@@ -49,6 +74,7 @@ test('parseBackendAuthResponse returns logged out state for object responses wit
     userName: '',
     userState: 'loggedOut',
     userSubscriptionPlan: '',
+    userSubscriptionStatus: '',
     userUsedTokens: 5,
   })
 })

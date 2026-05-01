@@ -11,6 +11,7 @@ export const getLoggedInState = (state: any, response: LoginResponse): any => {
     userName: typeof response.userName === 'string' ? response.userName : state.userName,
     userState: accessToken ? 'loggedIn' : 'loggedOut',
     userSubscriptionPlan: typeof response.subscriptionPlan === 'string' ? response.subscriptionPlan : state.userSubscriptionPlan,
+    userSubscriptionStatus: typeof response.subscriptionStatus === 'string' ? response.subscriptionStatus : state.userSubscriptionStatus,
     userUsedTokens: typeof response.usedTokens === 'number' ? response.usedTokens : state.userUsedTokens,
   }
 }
