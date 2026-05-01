@@ -1,8 +1,11 @@
 import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
+import { completeBrowserOidcLogin } from '../CompleteBrowserOidcLogin/CompleteBrowserOidcLogin.ts'
 import { getBackendRefreshUrl } from '../GetBackendRefreshUrl/GetBackendRefreshUrl.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
 import { parseBackendAuthResponse } from '../ParseBackendAuthResponse/ParseBackendAuthResponse.ts'
+import { persistLoginResult } from '../PersistLoginResult/PersistLoginResult.ts'
+import { restoreOidcAuth } from '../RestoreOidcAuth/RestoreOidcAuth.ts'
 
 const getPayload = async (response: Response): Promise<unknown> => {
   try {
@@ -17,6 +20,14 @@ export const syncBackendAuth = async (backendUrl: string): Promise<LoginResult> 
     return getLoggedOutBackendAuthState('Backend URL is missing.')
   }
   try {
+    const completedBrowserLogin = await completeBrowserOidcLogin(backendUrl)
+    if (completedBrowserLogin) {
+      return persistLoginResult(completedBrowserLogin)
+    }
+    const restoredOidcAuth = await restoreOidcAuth(backendUrl)
+    if (restoredOidcAuth) {
+      return persistLoginResult(restoredOidcAuth)
+    }
     if (MockBackendAuth.hasPendingMockRefreshResponse()) {
       const mockResponse = await MockBackendAuth.consumeNextRefreshResponse()
       return parseBackendAuthResponse(mockResponse)
