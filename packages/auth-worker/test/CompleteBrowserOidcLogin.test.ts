@@ -1,6 +1,11 @@
 import { expect, test } from '@jest/globals'
 import { completeBrowserOidcLogin } from '../src/parts/CompleteBrowserOidcLogin/CompleteBrowserOidcLogin.ts'
-import { clearPendingOidcAuthState, savePendingOidcAuthState } from '../src/parts/OidcAuthState/OidcAuthState.ts'
+import {
+  clearOidcCallbackUrl,
+  clearPendingOidcAuthState,
+  saveOidcCallbackUrl,
+  savePendingOidcAuthState,
+} from '../src/parts/OidcAuthState/OidcAuthState.ts'
 
 const getRequestUrl = (input: unknown): string => {
   if (typeof input === 'string') {
@@ -15,13 +20,14 @@ const getRequestUrl = (input: unknown): string => {
   return ''
 }
 
-test('completeBrowserOidcLogin exchanges the callback code and returns the logged in state', async () => {
+test('completeBrowserOidcLogin exchanges the callback code from stored callback url and returns the logged in state', async () => {
   await savePendingOidcAuthState({
     clientId: 'lvce-editor-web',
     codeVerifier: 'verifier-1',
-    redirectUri: 'https://client.test/',
+    redirectUri: 'https://client.test/auth/callback',
     state: 'state-1',
   })
+  await saveOidcCallbackUrl('https://client.test/auth/callback?code=code-1&state=state-1')
 
   const originalFetch = globalThis.fetch
   globalThis.fetch = async (...args: readonly unknown[]): Promise<Response> => {
@@ -37,7 +43,7 @@ test('completeBrowserOidcLogin exchanges the callback code and returns the logge
   }
 
   try {
-    const result = await completeBrowserOidcLogin('https://client.test/', async () => 'https://client.test/?code=code-1&state=state-1')
+    const result = await completeBrowserOidcLogin('https://client.test/')
 
     expect(result).toEqual({
       authAccessToken: 'oidc-access-token-1',
@@ -49,6 +55,7 @@ test('completeBrowserOidcLogin exchanges the callback code and returns the logge
     })
   } finally {
     globalThis.fetch = originalFetch
+    await clearOidcCallbackUrl()
     await clearPendingOidcAuthState()
   }
 })

@@ -3,7 +3,7 @@ import { exchangeAuthorizationCode } from '../ExchangeAuthorizationCode/Exchange
 import { getCurrentHref } from '../GetCurrentHref/GetCurrentHref.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 import { getOidcUserName } from '../GetOidcUserName/GetOidcUserName.ts'
-import { clearPendingOidcAuthState, loadPendingOidcAuthState } from '../OidcAuthState/OidcAuthState.ts'
+import { clearOidcCallbackUrl, clearPendingOidcAuthState, getOidcCallbackUrl, loadPendingOidcAuthState } from '../OidcAuthState/OidcAuthState.ts'
 
 const normalizeRedirectUri = (value: string): string => {
   const url = new URL(value)
@@ -12,11 +12,17 @@ const normalizeRedirectUri = (value: string): string => {
   return url.toString()
 }
 
-export const completeBrowserOidcLogin = async (
-  backendUrl: string,
-  getCurrentHrefFn: () => Promise<string> = getCurrentHref,
-): Promise<LoginResult | undefined> => {
-  const href = await getCurrentHrefFn()
+const getCallbackHref = async (): Promise<string> => {
+  const storedCallbackUrl = await getOidcCallbackUrl()
+  if (storedCallbackUrl) {
+    await clearOidcCallbackUrl()
+    return storedCallbackUrl
+  }
+  return getCurrentHref()
+}
+
+export const completeBrowserOidcLogin = async (backendUrl: string): Promise<LoginResult | undefined> => {
+  const href = await getCallbackHref()
   if (!href) {
     return undefined
   }
@@ -27,8 +33,8 @@ export const completeBrowserOidcLogin = async (
     return undefined
   }
   const code = url.searchParams.get('code') || ''
-  const errorDescription = url.searchParams.get('error_description') || ''
   const error = url.searchParams.get('error') || ''
+  const errorDescription = url.searchParams.get('error_description') || ''
   if (!code && !error) {
     return undefined
   }
@@ -50,21 +56,21 @@ export const completeBrowserOidcLogin = async (
     await clearPendingOidcAuthState()
     return getLoggedOutBackendAuthState('Authentication state mismatch.')
   }
-  const tokenResponse = await exchangeAuthorizationCode(
+  const exchanged = await exchangeAuthorizationCode(
     backendUrl,
     pendingAuthState.clientId,
     code,
     pendingAuthState.redirectUri,
     pendingAuthState.codeVerifier,
   )
-  const userName = await getOidcUserName(backendUrl, tokenResponse.accessToken)
+  const userName = await getOidcUserName(backendUrl, exchanged.accessToken)
   await clearPendingOidcAuthState()
   return {
-    authAccessToken: tokenResponse.accessToken,
+    authAccessToken: exchanged.accessToken,
     authClientId: pendingAuthState.clientId,
     authErrorMessage: '',
-    authRefreshToken: tokenResponse.refreshToken,
+    authRefreshToken: exchanged.refreshToken,
     userName,
-    userState: tokenResponse.accessToken ? 'loggedIn' : 'loggedOut',
+    userState: exchanged.accessToken ? 'loggedIn' : 'loggedOut',
   }
 }

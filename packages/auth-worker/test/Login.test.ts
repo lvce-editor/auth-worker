@@ -102,6 +102,7 @@ test('handleClickLogin stores access token and refresh token after successful lo
 
   expect(result).toEqual({
     authAccessToken: 'token-1',
+    authClientId: undefined,
     authErrorMessage: '',
     authRefreshToken: 'refresh-token-1',
     userName: undefined,

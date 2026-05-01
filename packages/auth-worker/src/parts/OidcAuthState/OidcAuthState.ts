@@ -1,12 +1,11 @@
 import { clearPersistentAuthValue, getPersistentAuthValue, setPersistentAuthValue } from '../PersistentAuthValue/PersistentAuthValue.ts'
 
-const accessTokenKey = 'accessToken'
+const callbackUrlKey = 'oidcCallbackUrl'
 const clientIdKey = 'oidcClientId'
 const pendingClientIdKey = 'pendingOidcClientId'
 const pendingCodeVerifierKey = 'pendingOidcCodeVerifier'
 const pendingRedirectUriKey = 'pendingOidcRedirectUri'
 const pendingStateKey = 'pendingOidcState'
-const refreshTokenKey = 'refreshToken'
 
 export interface PendingOidcAuthState {
   readonly clientId: string
@@ -15,8 +14,12 @@ export interface PendingOidcAuthState {
   readonly state: string
 }
 
-export const clearOidcAuthState = async (): Promise<void> => {
-  await Promise.all([clearPersistentAuthValue(accessTokenKey), clearPersistentAuthValue(clientIdKey), clearPersistentAuthValue(refreshTokenKey)])
+export const clearOidcCallbackUrl = async (): Promise<void> => {
+  await clearPersistentAuthValue(callbackUrlKey)
+}
+
+export const clearStoredOidcClientId = async (): Promise<void> => {
+  await clearPersistentAuthValue(clientIdKey)
 }
 
 export const clearPendingOidcAuthState = async (): Promise<void> => {
@@ -26,6 +29,10 @@ export const clearPendingOidcAuthState = async (): Promise<void> => {
     clearPersistentAuthValue(pendingRedirectUriKey),
     clearPersistentAuthValue(pendingStateKey),
   ])
+}
+
+export const getOidcCallbackUrl = async (): Promise<string> => {
+  return getPersistentAuthValue(callbackUrlKey)
 }
 
 export const getStoredOidcClientId = async (): Promise<string> => {
@@ -48,6 +55,10 @@ export const loadPendingOidcAuthState = async (): Promise<PendingOidcAuthState |
     redirectUri,
     state,
   }
+}
+
+export const saveOidcCallbackUrl = async (callbackUrl: string): Promise<void> => {
+  await setPersistentAuthValue(callbackUrlKey, callbackUrl)
 }
 
 export const saveOidcClientId = async (clientId: string): Promise<void> => {
