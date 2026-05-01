@@ -1,15 +1,11 @@
 import { expect, test } from '@jest/globals'
 import { completeBrowserOidcLogin } from '../src/parts/CompleteBrowserOidcLogin/CompleteBrowserOidcLogin.ts'
-<<<<<<< HEAD
 import {
   clearOidcCallbackUrl,
   clearPendingOidcAuthState,
   saveOidcCallbackUrl,
   savePendingOidcAuthState,
 } from '../src/parts/OidcAuthState/OidcAuthState.ts'
-=======
-import { clearPendingOidcAuthState, savePendingOidcAuthState } from '../src/parts/OidcAuthState/OidcAuthState.ts'
->>>>>>> origin/main
 
 const getRequestUrl = (input: unknown): string => {
   if (typeof input === 'string') {
@@ -24,7 +20,6 @@ const getRequestUrl = (input: unknown): string => {
   return ''
 }
 
-<<<<<<< HEAD
 test('completeBrowserOidcLogin exchanges the callback code from stored callback url and returns the logged in state', async () => {
   await savePendingOidcAuthState({
     clientId: 'lvce-editor-web',
@@ -33,15 +28,6 @@ test('completeBrowserOidcLogin exchanges the callback code from stored callback 
     state: 'state-1',
   })
   await saveOidcCallbackUrl('https://client.test/auth/callback?code=code-1&state=state-1')
-=======
-test('completeBrowserOidcLogin exchanges the callback code and returns the logged in state', async () => {
-  await savePendingOidcAuthState({
-    clientId: 'lvce-editor-web',
-    codeVerifier: 'verifier-1',
-    redirectUri: 'https://client.test/',
-    state: 'state-1',
-  })
->>>>>>> origin/main
 
   const originalFetch = globalThis.fetch
   globalThis.fetch = async (...args: readonly unknown[]): Promise<Response> => {
@@ -57,11 +43,7 @@ test('completeBrowserOidcLogin exchanges the callback code and returns the logge
   }
 
   try {
-<<<<<<< HEAD
     const result = await completeBrowserOidcLogin('https://client.test/')
-=======
-    const result = await completeBrowserOidcLogin('https://client.test/', async () => 'https://client.test/?code=code-1&state=state-1')
->>>>>>> origin/main
 
     expect(result).toEqual({
       authAccessToken: 'oidc-access-token-1',
@@ -73,10 +55,7 @@ test('completeBrowserOidcLogin exchanges the callback code and returns the logge
     })
   } finally {
     globalThis.fetch = originalFetch
-<<<<<<< HEAD
     await clearOidcCallbackUrl()
-=======
->>>>>>> origin/main
     await clearPendingOidcAuthState()
   }
 })

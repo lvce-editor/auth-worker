@@ -16,11 +16,7 @@ const getRequestUrl = (input: unknown): string => {
   return ''
 }
 
-<<<<<<< HEAD
 test('restoreOidcAuth refreshes the stored oidc tokens and returns the user name', async () => {
-=======
-test('restoreOidcAuth refreshes stored oidc tokens and resolves the user name', async () => {
->>>>>>> origin/main
   await saveOidcClientId('lvce-editor-web')
   await setPersistentAuthValue('refreshToken', 'stored-refresh-token-1')
 
@@ -50,12 +46,7 @@ test('restoreOidcAuth refreshes stored oidc tokens and resolves the user name', 
     })
   } finally {
     globalThis.fetch = originalFetch
-<<<<<<< HEAD
     await setPersistentAuthValue('accessToken', '')
     await setPersistentAuthValue('refreshToken', '')
-=======
-    await setPersistentAuthValue('refreshToken', '')
-    await setPersistentAuthValue('accessToken', '')
->>>>>>> origin/main
   }
 })
