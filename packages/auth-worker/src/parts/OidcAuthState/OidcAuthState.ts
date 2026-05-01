@@ -1,11 +1,19 @@
 import { clearPersistentAuthValue, getPersistentAuthValue, setPersistentAuthValue } from '../PersistentAuthValue/PersistentAuthValue.ts'
 
+<<<<<<< HEAD
 const callbackUrlKey = 'oidcCallbackUrl'
+=======
+const accessTokenKey = 'accessToken'
+>>>>>>> origin/main
 const clientIdKey = 'oidcClientId'
 const pendingClientIdKey = 'pendingOidcClientId'
 const pendingCodeVerifierKey = 'pendingOidcCodeVerifier'
 const pendingRedirectUriKey = 'pendingOidcRedirectUri'
 const pendingStateKey = 'pendingOidcState'
+<<<<<<< HEAD
+=======
+const refreshTokenKey = 'refreshToken'
+>>>>>>> origin/main
 
 export interface PendingOidcAuthState {
   readonly clientId: string
@@ -14,12 +22,17 @@ export interface PendingOidcAuthState {
   readonly state: string
 }
 
+<<<<<<< HEAD
 export const clearOidcCallbackUrl = async (): Promise<void> => {
   await clearPersistentAuthValue(callbackUrlKey)
 }
 
 export const clearStoredOidcClientId = async (): Promise<void> => {
   await clearPersistentAuthValue(clientIdKey)
+=======
+export const clearOidcAuthState = async (): Promise<void> => {
+  await Promise.all([clearPersistentAuthValue(accessTokenKey), clearPersistentAuthValue(clientIdKey), clearPersistentAuthValue(refreshTokenKey)])
+>>>>>>> origin/main
 }
 
 export const clearPendingOidcAuthState = async (): Promise<void> => {
@@ -31,10 +44,13 @@ export const clearPendingOidcAuthState = async (): Promise<void> => {
   ])
 }
 
+<<<<<<< HEAD
 export const getOidcCallbackUrl = async (): Promise<string> => {
   return getPersistentAuthValue(callbackUrlKey)
 }
 
+=======
+>>>>>>> origin/main
 export const getStoredOidcClientId = async (): Promise<string> => {
   return getPersistentAuthValue(clientIdKey)
 }
@@ -57,10 +73,13 @@ export const loadPendingOidcAuthState = async (): Promise<PendingOidcAuthState |
   }
 }
 
+<<<<<<< HEAD
 export const saveOidcCallbackUrl = async (callbackUrl: string): Promise<void> => {
   await setPersistentAuthValue(callbackUrlKey, callbackUrl)
 }
 
+=======
+>>>>>>> origin/main
 export const saveOidcClientId = async (clientId: string): Promise<void> => {
   await setPersistentAuthValue(clientIdKey, clientId)
 }

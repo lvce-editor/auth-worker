@@ -18,6 +18,7 @@ test('getBackendLoginRequest creates an oidc authorize url with pkce parameters'
 
   expect(result.clientId).toBe('lvce-editor-web')
   expect(result.codeVerifier).toBe('verifier-1')
+  expect(result.clientId).toBe('lvce-editor-web')
   expect(result.nonce).toBe('uuid-1')
   expect(result.redirectUri).toBe('http://localhost:43123/callback')
   expect(result.state).toBe('uuid-1')
