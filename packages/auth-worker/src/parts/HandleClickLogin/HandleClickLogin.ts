@@ -6,6 +6,7 @@ import { getBackendLoginRequest } from '../GetBackendLoginRequest/GetBackendLogi
 import { getLoggedInState } from '../GetLoggedInState/GetLoggedInState.ts'
 import { isLoginResponse } from '../IsLoginResponse/IsLoginResponse.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
+import { savePendingOidcAuthState } from '../OidcAuthState/OidcAuthState.ts'
 import { persistLoginResult } from '../PersistLoginResult/PersistLoginResult.ts'
 import { waitForElectronBackendLogin } from '../WaitForElectronBackendLogin/WaitForElectronBackendLogin.ts'
 
@@ -39,13 +40,27 @@ export const handleClickLogin = async (options: LoginOptions): Promise<LoginResu
       return persistLoginResult(getLoggedInState(signingInState, response))
     }
     const uid = 0
-    const { codeVerifier, loginUrl, redirectUri } = await getBackendLoginRequest(backendUrl, platform, uid)
+    const { clientId, codeVerifier, loginUrl, redirectUri, state } = await getBackendLoginRequest(backendUrl, platform, uid)
+    if (platform !== PlatformType.Electron) {
+      await savePendingOidcAuthState({
+        clientId,
+        codeVerifier,
+        redirectUri,
+        state,
+      })
+    }
     await OpenerWorker.invoke('Open.openUrl', loginUrl, platform, authUseRedirect)
+    if (platform !== PlatformType.Electron && authUseRedirect) {
+      return signingInState
+    }
     const authState =
       platform === PlatformType.Electron
         ? await waitForElectronBackendLogin(backendUrl, uid, redirectUri, codeVerifier)
         : await waitForBackendLogin(backendUrl)
-    return persistLoginResult(authState)
+    return persistLoginResult({
+      ...authState,
+      authClientId: clientId,
+    })
   } catch (error) {
     const errorMessage = error instanceof Error && error.message ? error.message : 'Backend authentication failed.'
     return {
