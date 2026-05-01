@@ -9,34 +9,6 @@ import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
 import { persistLoginResult } from '../PersistLoginResult/PersistLoginResult.ts'
 import { waitForElectronBackendLogin } from '../WaitForElectronBackendLogin/WaitForElectronBackendLogin.ts'
 
-const persistLoginResult = async (loginResult: LoginResult): Promise<LoginResult> => {
-  if (loginResult.userState !== 'loggedIn') {
-    return loginResult
-  }
-  await setPersistentAuthValue('accessToken', loginResult.authAccessToken ?? '')
-  await setPersistentAuthValue('refreshToken', loginResult.authRefreshToken ?? '')
-  return loginResult
-}
-
-export interface LoginOptions {
-  readonly authUseRedirect?: boolean
-  readonly backendUrl: string
-  readonly platform: number
-}
-
-export interface LoginResult {
-  readonly authAccessToken?: string
-  readonly authCode?: string
-  readonly authCodeVerifier?: string
-  readonly authErrorMessage: string
-  readonly authRefreshToken?: string
-  readonly userName?: string
-  readonly userState: 'loggedOut' | 'loggingIn' | 'loggedIn'
-  readonly userSubscriptionPlan?: string
-  readonly userSubscriptionStatus?: string
-  readonly userUsedTokens?: number
-}
-
 export const handleClickLogin = async (options: LoginOptions): Promise<LoginResult> => {
   const { authUseRedirect, backendUrl, platform } = options
   if (!backendUrl) {
