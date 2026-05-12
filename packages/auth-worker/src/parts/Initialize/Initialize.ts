@@ -4,7 +4,7 @@ import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/Ge
 import { getPersistedAuthSession } from '../PersistedAuthSession/PersistedAuthSession.ts'
 import { persistLoginResult } from '../PersistLoginResult/PersistLoginResult.ts'
 
-interface InitializeOptions {
+export interface InitializeOptions {
   readonly backendUrl?: string
   readonly href?: string
   readonly platform?: number
