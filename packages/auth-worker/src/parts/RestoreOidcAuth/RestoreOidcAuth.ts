@@ -1,11 +1,12 @@
 import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
 import { getOidcUserName } from '../GetOidcUserName/GetOidcUserName.ts'
-import { clearStoredOidcClientId, getStoredOidcClientId } from '../OidcAuthState/OidcAuthState.ts'
-import { clearPersistentAuthValue, getPersistentAuthValue } from '../PersistentAuthValue/PersistentAuthValue.ts'
+import { getStoredOidcClientId } from '../OidcAuthState/OidcAuthState.ts'
+import { clearPersistedAuthSession } from '../PersistedAuthSession/PersistedAuthSession.ts'
+import { getPersistentAuthValue } from '../PersistentAuthValue/PersistentAuthValue.ts'
 import { refreshOidcTokens } from '../RefreshOidcTokens/RefreshOidcTokens.ts'
 
 const clearStoredOidcAuth = async (): Promise<void> => {
-  await Promise.all([clearPersistentAuthValue('accessToken'), clearPersistentAuthValue('refreshToken'), clearStoredOidcClientId()])
+  await clearPersistedAuthSession()
 }
 
 const toLoginResult = (accessToken: string, refreshToken: string, clientId: string, userName: string): LoginResult => {
