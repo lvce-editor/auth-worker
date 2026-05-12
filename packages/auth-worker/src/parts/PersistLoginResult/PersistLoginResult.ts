@@ -1,15 +1,11 @@
 import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
-import { saveOidcClientId } from '../OidcAuthState/OidcAuthState.ts'
-import { setPersistentAuthValue } from '../PersistentAuthValue/PersistentAuthValue.ts'
+import { clearPersistedAuthSession, persistAuthSession } from '../PersistedAuthSession/PersistedAuthSession.ts'
 
 export const persistLoginResult = async (loginResult: LoginResult): Promise<LoginResult> => {
   if (loginResult.userState !== 'loggedIn') {
+    await clearPersistedAuthSession()
     return loginResult
   }
-  await Promise.all([
-    setPersistentAuthValue('accessToken', loginResult.authAccessToken ?? ''),
-    setPersistentAuthValue('refreshToken', loginResult.authRefreshToken ?? ''),
-    loginResult.authClientId ? saveOidcClientId(loginResult.authClientId) : Promise.resolve(),
-  ])
+  await persistAuthSession(loginResult)
   return loginResult
 }
