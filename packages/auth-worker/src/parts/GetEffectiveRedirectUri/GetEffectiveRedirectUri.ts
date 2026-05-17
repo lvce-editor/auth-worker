@@ -6,7 +6,7 @@ const getGithubPagesBasePath = (url: URL): string => {
   if (!url.hostname.endsWith('.github.io')) {
     return ''
   }
-  const firstSegment = url.pathname.split('/').filter(Boolean)[0]
+  const firstSegment = url.pathname.split('/').find(Boolean)
   if (!firstSegment) {
     return ''
   }
