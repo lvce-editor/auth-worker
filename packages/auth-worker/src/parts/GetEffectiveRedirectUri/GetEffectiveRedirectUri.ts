@@ -2,6 +2,17 @@ import { PlatformType } from '@lvce-editor/constants'
 import { getCurrentHref } from '../GetCurrentHref/GetCurrentHref.ts'
 import { getElectronRedirectUri } from '../GetElectronRedirectUri/GetElectronRedirectUri.ts'
 
+const getGithubPagesBasePath = (url: URL): string => {
+  if (!url.hostname.endsWith('.github.io')) {
+    return ''
+  }
+  const firstSegment = url.pathname.split('/').find(Boolean)
+  if (!firstSegment) {
+    return ''
+  }
+  return `/${firstSegment}`
+}
+
 const getWebRedirectUri = async (): Promise<string> => {
   const href = await getCurrentHref()
   if (!href) {
@@ -9,7 +20,7 @@ const getWebRedirectUri = async (): Promise<string> => {
   }
   try {
     const url = new URL(href)
-    return `${url.origin}/auth/callback`
+    return `${url.origin}${getGithubPagesBasePath(url)}/auth/callback`
   } catch {
     return ''
   }
