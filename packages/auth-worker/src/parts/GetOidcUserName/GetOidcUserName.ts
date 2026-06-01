@@ -23,6 +23,6 @@ export const getOidcUserName = async (backendUrl: string, accessToken: string, f
   if (!payload || typeof payload !== 'object') {
     return ''
   }
-  const displayName = Reflect.get(payload, 'displayName')
+  const { displayName } = payload as { readonly displayName?: unknown }
   return typeof displayName === 'string' ? displayName : ''
 }
