@@ -3,6 +3,7 @@ import { completeBrowserOidcLogin } from '../CompleteBrowserOidcLogin/CompleteBr
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 import { getPersistedAuthSession } from '../PersistedAuthSession/PersistedAuthSession.ts'
 import { persistLoginResult } from '../PersistLoginResult/PersistLoginResult.ts'
+import { restoreOidcAuth } from '../RestoreOidcAuth/RestoreOidcAuth.ts'
 
 export interface InitializeOptions {
   readonly backendUrl?: string
@@ -24,6 +25,10 @@ export const initialize = async (options: InitializeOptions | number): Promise<L
       const completedBrowserLogin = await completeBrowserOidcLogin(backendUrl)
       if (completedBrowserLogin) {
         return persistLoginResult(completedBrowserLogin)
+      }
+      const restoredOidcAuth = await restoreOidcAuth(backendUrl)
+      if (restoredOidcAuth) {
+        return persistLoginResult(restoredOidcAuth)
       }
     }
     const persistedAuthSession = await getPersistedAuthSession()
