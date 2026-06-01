@@ -38,7 +38,7 @@ afterEach(async () => {
   await clearPersistedAuthSession()
 })
 
-test('initialize returns the persisted auth session without backend requests', async () => {
+test('initialize refreshes a persisted oidc auth session', async () => {
   await persistAuthSession({
     authAccessToken: 'token-1',
     authClientId: 'lvce-editor-web',
@@ -52,25 +52,30 @@ test('initialize returns the persisted auth session without backend requests', a
   })
 
   const fetchCalls: unknown[] = []
-  const mockFetch: typeof fetch = async (...args: readonly unknown[]) => {
+  const mockFetch: typeof fetch = async (...args: readonly unknown[]): Promise<Response> => {
     fetchCalls.push(args)
-    throw new Error('fetch should not be called during initialize')
+    const url = getRequestUrl(args[0])
+    if (url === 'https://client.test/account/me') {
+      return Response.json({ displayName: 'Refreshed User' })
+    }
+    return Response.json({
+      access_token: 'token-2',
+      refresh_token: 'refresh-token-2',
+      token_type: 'bearer',
+    })
   }
   setFetch(mockFetch)
 
   await expect(initialize({ backendUrl: 'https://client.test/' })).resolves.toEqual({
-    authAccessToken: 'token-1',
+    authAccessToken: 'token-2',
     authClientId: 'lvce-editor-web',
     authErrorMessage: '',
-    authRefreshToken: 'refresh-token-1',
-    userName: 'Persisted User',
+    authRefreshToken: 'refresh-token-2',
+    userName: 'Refreshed User',
     userState: 'loggedIn',
-    userSubscriptionPlan: 'pro',
-    userSubscriptionStatus: 'active',
-    userUsedTokens: 42,
   })
 
-  expect(fetchCalls).toEqual([])
+  expect(fetchCalls).toHaveLength(2)
 })
 
 test('initialize completes a pending callback and persists the resulting auth session', async () => {
@@ -118,20 +123,25 @@ test('initialize completes a pending callback and persists the resulting auth se
     userUsedTokens: undefined,
   })
 
-  setFetch(async () => {
-    throw new Error('fetch should not be called on subsequent initialize')
+  setFetch(async (...args: readonly unknown[]): Promise<Response> => {
+    const url = getRequestUrl(args[0])
+    if (url === 'https://client.test/account/me') {
+      return Response.json({ displayName: 'Refreshed Callback User' })
+    }
+    return Response.json({
+      access_token: 'oidc-access-token-2',
+      refresh_token: 'oidc-refresh-token-2',
+      token_type: 'bearer',
+    })
   })
 
   await expect(initialize({ backendUrl: 'https://client.test/' })).resolves.toEqual({
-    authAccessToken: 'oidc-access-token-1',
+    authAccessToken: 'oidc-access-token-2',
     authClientId: 'lvce-editor-web',
     authErrorMessage: '',
-    authRefreshToken: 'oidc-refresh-token-1',
-    userName: 'Callback User',
+    authRefreshToken: 'oidc-refresh-token-2',
+    userName: 'Refreshed Callback User',
     userState: 'loggedIn',
-    userSubscriptionPlan: undefined,
-    userSubscriptionStatus: undefined,
-    userUsedTokens: undefined,
   })
 
   expect(fetchCalls).toHaveLength(2)
