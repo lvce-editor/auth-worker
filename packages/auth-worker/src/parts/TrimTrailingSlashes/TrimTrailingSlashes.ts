@@ -1,5 +1,7 @@
-const trailingSlashesRegex = /\/+$/
-
 export const trimTrailingSlashes = (value: string): string => {
-  return value.replace(trailingSlashesRegex, '')
+  let end = value.length
+  while (end > 0 && value[end - 1] === '/') {
+    end--
+  }
+  return value.slice(0, end)
 }

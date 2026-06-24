@@ -56,12 +56,12 @@ export const getPersistedAuthSession = async (): Promise<LoginResult | undefined
     authAccessToken: accessToken,
     authErrorMessage: '',
     userState: 'loggedIn',
-    ...(optionalAuthClientId ? { authClientId } : {}),
-    ...(optionalRefreshToken ? { authRefreshToken: refreshToken } : {}),
-    ...(optionalUserName ? { userName } : {}),
-    ...(optionalSubscriptionPlan ? { userSubscriptionPlan } : {}),
-    ...(optionalSubscriptionStatus ? { userSubscriptionStatus } : {}),
-    ...(typeof optionalUsedTokens === 'number' ? { userUsedTokens: optionalUsedTokens } : {}),
+    ...(optionalAuthClientId && { authClientId }),
+    ...(optionalRefreshToken && { authRefreshToken: refreshToken }),
+    ...(optionalUserName && { userName }),
+    ...(optionalSubscriptionPlan && { userSubscriptionPlan }),
+    ...(optionalSubscriptionStatus && { userSubscriptionStatus }),
+    ...(typeof optionalUsedTokens === 'number' && { userUsedTokens: optionalUsedTokens }),
   }
 }
 

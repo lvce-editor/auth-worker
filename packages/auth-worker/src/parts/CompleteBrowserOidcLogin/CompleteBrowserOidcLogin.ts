@@ -9,7 +9,7 @@ const normalizeRedirectUri = (value: string): string => {
   const url = new URL(value)
   url.hash = ''
   url.search = ''
-  return url.toString()
+  return url.href
 }
 
 const getCallbackHref = async (): Promise<string> => {
@@ -34,7 +34,6 @@ export const completeBrowserOidcLogin = async (backendUrl: string): Promise<Logi
   }
   const code = url.searchParams.get('code') || ''
   const error = url.searchParams.get('error') || ''
-  const errorDescription = url.searchParams.get('error_description') || ''
   if (!code && !error) {
     return undefined
   }
@@ -47,6 +46,7 @@ export const completeBrowserOidcLogin = async (backendUrl: string): Promise<Logi
     await clearPendingOidcAuthState()
     return getLoggedOutBackendAuthState('Authentication returned to an unexpected redirect URI.')
   }
+  const errorDescription = url.searchParams.get('error_description') || ''
   if (error) {
     await clearPendingOidcAuthState()
     return getLoggedOutBackendAuthState(errorDescription || error)

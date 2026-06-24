@@ -12,5 +12,5 @@ export const createUrl = (options: CreateUrlOptions): string => {
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, value)
   }
-  return url.toString()
+  return url.href
 }
