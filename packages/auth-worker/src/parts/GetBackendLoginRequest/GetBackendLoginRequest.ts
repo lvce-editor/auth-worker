@@ -41,7 +41,7 @@ export const getBackendLoginRequest = async (
   return {
     clientId,
     codeVerifier,
-    loginUrl: loginUrl.toString(),
+    loginUrl: loginUrl.href,
     nonce,
     redirectUri: effectiveRedirectUri,
     state,

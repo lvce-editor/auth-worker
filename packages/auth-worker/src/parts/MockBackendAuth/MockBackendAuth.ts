@@ -14,36 +14,43 @@ export interface MockBackendAuthError {
 
 export type MockBackendAuthResponse = MockBackendAuthSuccess | MockBackendAuthError
 
-let nextLoginResponse: MockBackendAuthResponse | undefined
-let nextRefreshResponse: MockBackendAuthResponse | undefined
+interface MockBackendAuthState {
+  nextLoginResponse: MockBackendAuthResponse | undefined
+  nextRefreshResponse: MockBackendAuthResponse | undefined
+}
+
+const state: MockBackendAuthState = {
+  nextLoginResponse: undefined,
+  nextRefreshResponse: undefined,
+}
 
 export const setNextLoginResponse = (response: MockBackendAuthResponse): void => {
-  nextLoginResponse = response
+  state.nextLoginResponse = response
 }
 
 export const setNextRefreshResponse = (response: MockBackendAuthResponse): void => {
-  nextRefreshResponse = response
+  state.nextRefreshResponse = response
 }
 
 export const clear = (): void => {
-  nextLoginResponse = undefined
-  nextRefreshResponse = undefined
+  state.nextLoginResponse = undefined
+  state.nextRefreshResponse = undefined
 }
 
 export const hasPendingMockLoginResponse = (): boolean => {
-  return !!nextLoginResponse
+  return !!state.nextLoginResponse
 }
 
 export const hasPendingMockRefreshResponse = (): boolean => {
-  return !!nextRefreshResponse
+  return !!state.nextRefreshResponse
 }
 
 export const consumeNextLoginResponse = async (): Promise<unknown> => {
-  if (!nextLoginResponse) {
+  if (!state.nextLoginResponse) {
     return undefined
   }
-  const response = nextLoginResponse
-  nextLoginResponse = undefined
+  const response = state.nextLoginResponse
+  state.nextLoginResponse = undefined
   if (response.delay > 0) {
     await delay(response.delay)
   }
@@ -54,11 +61,11 @@ export const consumeNextLoginResponse = async (): Promise<unknown> => {
 }
 
 export const consumeNextRefreshResponse = async (): Promise<unknown> => {
-  if (!nextRefreshResponse) {
+  if (!state.nextRefreshResponse) {
     return undefined
   }
-  const response = nextRefreshResponse
-  nextRefreshResponse = undefined
+  const response = state.nextRefreshResponse
+  state.nextRefreshResponse = undefined
   if (response.delay > 0) {
     await new Promise((resolve) => setTimeout(resolve, response.delay))
   }

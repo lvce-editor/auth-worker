@@ -3,7 +3,13 @@ const objectStoreName = 'auth'
 
 const memoryStorage = new Map<string, string>()
 
-let databasePromise: Promise<IDBDatabase | undefined> | undefined
+interface PersistentAuthState {
+  databasePromise: Promise<IDBDatabase | undefined> | undefined
+}
+
+const state: PersistentAuthState = {
+  databasePromise: undefined,
+}
 
 // IndexedDB request objects are mutable browser primitives and cannot satisfy the readonly rule structurally.
 // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
@@ -37,8 +43,8 @@ const getDatabase = async (): Promise<IDBDatabase | undefined> => {
   if (typeof indexedDB === 'undefined') {
     return undefined
   }
-  if (!databasePromise) {
-    databasePromise = new Promise((resolve, reject) => {
+  if (!state.databasePromise) {
+    state.databasePromise = new Promise((resolve, reject) => {
       const request = indexedDB.open(databaseName, 1)
       request.addEventListener('upgradeneeded', () => {
         const database = request.result
@@ -54,7 +60,7 @@ const getDatabase = async (): Promise<IDBDatabase | undefined> => {
       })
     })
   }
-  return databasePromise
+  return state.databasePromise
 }
 
 export const getPersistentAuthValue = async (key: string): Promise<string> => {

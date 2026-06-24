@@ -1,4 +1,4 @@
-import { expect, test } from '@jest/globals'
+import { expect, jest, test } from '@jest/globals'
 import { completeBrowserOidcLogin } from '../src/parts/CompleteBrowserOidcLogin/CompleteBrowserOidcLogin.ts'
 import {
   clearOidcCallbackUrl,
@@ -12,7 +12,7 @@ const getRequestUrl = (input: unknown): string => {
     return input
   }
   if (input instanceof URL) {
-    return input.toString()
+    return input.href
   }
   if (input instanceof Request) {
     return input.url
@@ -29,8 +29,7 @@ test('completeBrowserOidcLogin exchanges the callback code from stored callback 
   })
   await saveOidcCallbackUrl('https://client.test/auth/callback?code=code-1&state=state-1')
 
-  const originalFetch = globalThis.fetch
-  globalThis.fetch = async (...args: readonly unknown[]): Promise<Response> => {
+  const fetchMock = jest.spyOn(globalThis, 'fetch').mockImplementation(async (...args: readonly unknown[]): Promise<Response> => {
     const url = getRequestUrl(args[0])
     if (url === 'https://client.test/account/me') {
       return Response.json({ displayName: 'Test User' })
@@ -40,7 +39,7 @@ test('completeBrowserOidcLogin exchanges the callback code from stored callback 
       refresh_token: 'oidc-refresh-token-1',
       token_type: 'bearer',
     })
-  }
+  })
 
   try {
     const result = await completeBrowserOidcLogin('https://client.test/')
@@ -54,7 +53,7 @@ test('completeBrowserOidcLogin exchanges the callback code from stored callback 
       userState: 'loggedIn',
     })
   } finally {
-    globalThis.fetch = originalFetch
+    fetchMock.mockRestore()
     await clearOidcCallbackUrl()
     await clearPendingOidcAuthState()
   }
