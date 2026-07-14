@@ -2,6 +2,7 @@ import { PlatformType } from '@lvce-editor/constants'
 import { OpenerWorker } from '@lvce-editor/rpc-registry'
 import type { LoginOptions, LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
 import { getLoggedOutBackendAuthState, waitForBackendLogin } from '../BackendAuth/BackendAuth.ts'
+import { getAuthUseRedirect } from '../GetAuthUseRedirect/GetAuthUseRedirect.ts'
 import { getBackendLoginRequest } from '../GetBackendLoginRequest/GetBackendLoginRequest.ts'
 import { getLoggedInState } from '../GetLoggedInState/GetLoggedInState.ts'
 import { isLoginResponse } from '../IsLoginResponse/IsLoginResponse.ts'
@@ -30,12 +31,8 @@ const getMockLoginResult = async (signingInState: LoginResult): Promise<LoginRes
   return persistLoginResult(getLoggedInState(signingInState, response))
 }
 
-const getInteractiveLoginResult = async (
-  backendUrl: string,
-  platform: number,
-  authUseRedirect: boolean | undefined,
-  signingInState: LoginResult,
-): Promise<LoginResult> => {
+const getInteractiveLoginResult = async (backendUrl: string, platform: number, signingInState: LoginResult): Promise<LoginResult> => {
+  const authUseRedirect = getAuthUseRedirect(platform)
   const uid = 0
   const { clientId, codeVerifier, loginUrl, redirectUri, state } = await getBackendLoginRequest(backendUrl, platform, uid)
   if (platform !== PlatformType.Electron) {
@@ -64,7 +61,7 @@ const getInteractiveLoginResult = async (
 }
 
 export const handleClickLogin = async (options: LoginOptions): Promise<LoginResult> => {
-  const { authUseRedirect, backendUrl, platform } = options
+  const { backendUrl, platform } = options
   if (!backendUrl) {
     return {
       authErrorMessage: 'Backend URL is missing.',
@@ -80,7 +77,7 @@ export const handleClickLogin = async (options: LoginOptions): Promise<LoginResu
     if (mockLoginResult) {
       return mockLoginResult
     }
-    return getInteractiveLoginResult(backendUrl, platform, authUseRedirect, signingInState)
+    return getInteractiveLoginResult(backendUrl, platform, signingInState)
   } catch (error) {
     await clearPendingOidcAuthState()
     const errorMessage = error instanceof Error && error.message ? error.message : 'Backend authentication failed.'
