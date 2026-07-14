@@ -1,4 +1,5 @@
 import { RpcId } from '@lvce-editor/constants'
+import { getAccessToken } from '../GetAccessToken/GetAccessToken.ts'
 import { handleMessagePort } from '../HandleMessagePort/HandleMessagePort.ts'
 import { initialize } from '../Initialize/Initialize.ts'
 import { handleClickLogin } from '../Login/Login.ts'
@@ -18,6 +19,7 @@ export const commandMap = {
   'Auth.clearMocks': clear,
   'Auth.consumeNextLoginResponse': consumeNextLoginResponse,
   'Auth.consumeNextRefreshResponse': consumeNextRefreshResponse,
+  'Auth.getAccessToken': getAccessToken,
   'Auth.hasPendingMockLoginResponse': hasPendingMockLoginResponse,
   'Auth.hasPendingMockRefreshResponse': hasPendingMockRefreshResponse,
   'Auth.initialize': initialize,
