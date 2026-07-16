@@ -1,4 +1,5 @@
 import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
+import { getAccessTokenExpiresAt } from '../AccessTokenExpiration/AccessTokenExpiration.ts'
 import { exchangeAuthorizationCode } from '../ExchangeAuthorizationCode/ExchangeAuthorizationCode.ts'
 import { getCurrentHref } from '../GetCurrentHref/GetCurrentHref.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
@@ -64,9 +65,11 @@ export const completeBrowserOidcLogin = async (backendUrl: string): Promise<Logi
     pendingAuthState.codeVerifier,
   )
   const userName = await getOidcUserName(backendUrl, exchanged.accessToken)
+  const authAccessTokenExpiresAt = getAccessTokenExpiresAt(exchanged.expiresIn)
   await clearPendingOidcAuthState()
   return {
     authAccessToken: exchanged.accessToken,
+    ...(authAccessTokenExpiresAt && { authAccessTokenExpiresAt }),
     authClientId: pendingAuthState.clientId,
     authErrorMessage: '',
     authRefreshToken: exchanged.refreshToken,

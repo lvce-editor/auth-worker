@@ -1,5 +1,6 @@
 import { AuthProcess } from '@lvce-editor/rpc-registry'
 import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
+import { getAccessTokenExpiresAt } from '../AccessTokenExpiration/AccessTokenExpiration.ts'
 import { delay } from '../Delay/Delay.ts'
 import { exchangeElectronAuthorizationCode } from '../ExchangeElectronAuthorizationCode/ExchangeElectronAuthorizationCode.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
@@ -25,15 +26,17 @@ export const waitForElectronBackendLogin = async (
     code: string,
     redirectUri: string,
     codeVerifier: string,
-  ) => Promise<{ accessToken: string; refreshToken: string }> = exchangeElectronAuthorizationCode,
+  ) => Promise<{ accessToken: string; expiresIn: number | undefined; refreshToken: string }> = exchangeElectronAuthorizationCode,
 ): Promise<LoginResult> => {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
     const authorizationCode = await getAuthorizationCode(uid)
     if (hasAuthorizationCode(authorizationCode)) {
       const tokenResponse = await exchangeAuthorizationCode(backendUrl, authorizationCode, redirectUri, codeVerifier)
+      const authAccessTokenExpiresAt = getAccessTokenExpiresAt(tokenResponse.expiresIn)
       return {
         authAccessToken: tokenResponse.accessToken,
+        ...(authAccessTokenExpiresAt && { authAccessTokenExpiresAt }),
         authErrorMessage: '',
         authRefreshToken: tokenResponse.refreshToken,
         userState: tokenResponse.accessToken ? 'loggedIn' : 'loggedOut',

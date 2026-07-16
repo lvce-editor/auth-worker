@@ -35,6 +35,7 @@ test('exchangeElectronAuthorizationCode sends the oidc token exchange and return
     processCalls.push({ authorizationServer, client })
     return {
       access_token: 'access-token-1',
+      expires_in: 3600,
       refresh_token: 'refresh-token-1',
       token_type: 'bearer',
     }
@@ -51,6 +52,7 @@ test('exchangeElectronAuthorizationCode sends the oidc token exchange and return
 
   expect(result).toEqual({
     accessToken: 'access-token-1',
+    expiresIn: 3600,
     refreshToken: 'refresh-token-1',
   } satisfies ExchangeElectronAuthorizationCodeResult)
   expect(requestCalls).toEqual([

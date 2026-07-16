@@ -3,6 +3,7 @@ import { clearStoredOidcClientId, getStoredOidcClientId, saveOidcClientId } from
 import { clearPersistentAuthValue, getPersistentAuthValue, setPersistentAuthValue } from '../PersistentAuthValue/PersistentAuthValue.ts'
 
 const accessTokenKey = 'accessToken'
+const accessTokenExpiresAtKey = 'accessTokenExpiresAt'
 const refreshTokenKey = 'refreshToken'
 const userNameKey = 'userName'
 const userSubscriptionPlanKey = 'userSubscriptionPlan'
@@ -24,6 +25,7 @@ const toOptionalNumber = (value: string): number | undefined => {
 export const clearPersistedAuthSession = async (): Promise<void> => {
   await Promise.all([
     clearPersistentAuthValue(accessTokenKey),
+    clearPersistentAuthValue(accessTokenExpiresAtKey),
     clearPersistentAuthValue(refreshTokenKey),
     clearStoredOidcClientId(),
     clearPersistentAuthValue(userNameKey),
@@ -34,19 +36,22 @@ export const clearPersistedAuthSession = async (): Promise<void> => {
 }
 
 export const getPersistedAuthSession = async (): Promise<LoginResult | undefined> => {
-  const [accessToken, refreshToken, authClientId, userName, userSubscriptionPlan, userSubscriptionStatus, userUsedTokens] = await Promise.all([
-    getPersistentAuthValue(accessTokenKey),
-    getPersistentAuthValue(refreshTokenKey),
-    getStoredOidcClientId(),
-    getPersistentAuthValue(userNameKey),
-    getPersistentAuthValue(userSubscriptionPlanKey),
-    getPersistentAuthValue(userSubscriptionStatusKey),
-    getPersistentAuthValue(userUsedTokensKey),
-  ])
+  const [accessToken, accessTokenExpiresAt, refreshToken, authClientId, userName, userSubscriptionPlan, userSubscriptionStatus, userUsedTokens] =
+    await Promise.all([
+      getPersistentAuthValue(accessTokenKey),
+      getPersistentAuthValue(accessTokenExpiresAtKey),
+      getPersistentAuthValue(refreshTokenKey),
+      getStoredOidcClientId(),
+      getPersistentAuthValue(userNameKey),
+      getPersistentAuthValue(userSubscriptionPlanKey),
+      getPersistentAuthValue(userSubscriptionStatusKey),
+      getPersistentAuthValue(userUsedTokensKey),
+    ])
   if (!accessToken && !refreshToken) {
     return undefined
   }
   const optionalAuthClientId = toOptionalString(authClientId)
+  const optionalAccessTokenExpiresAt = toOptionalNumber(accessTokenExpiresAt)
   const optionalRefreshToken = toOptionalString(refreshToken)
   const optionalUserName = toOptionalString(userName)
   const optionalSubscriptionPlan = toOptionalString(userSubscriptionPlan)
@@ -54,6 +59,7 @@ export const getPersistedAuthSession = async (): Promise<LoginResult | undefined
   const optionalUsedTokens = toOptionalNumber(userUsedTokens)
   return {
     authAccessToken: accessToken,
+    ...(typeof optionalAccessTokenExpiresAt === 'number' && { authAccessTokenExpiresAt: optionalAccessTokenExpiresAt }),
     authErrorMessage: '',
     userState: 'loggedIn',
     ...(optionalAuthClientId && { authClientId }),
@@ -68,6 +74,10 @@ export const getPersistedAuthSession = async (): Promise<LoginResult | undefined
 export const persistAuthSession = async (loginResult: LoginResult): Promise<void> => {
   await Promise.all([
     setPersistentAuthValue(accessTokenKey, loginResult.authAccessToken ?? ''),
+    setPersistentAuthValue(
+      accessTokenExpiresAtKey,
+      typeof loginResult.authAccessTokenExpiresAt === 'number' ? String(loginResult.authAccessTokenExpiresAt) : '',
+    ),
     setPersistentAuthValue(refreshTokenKey, loginResult.authRefreshToken ?? ''),
     loginResult.authClientId ? saveOidcClientId(loginResult.authClientId) : clearStoredOidcClientId(),
     setPersistentAuthValue(userNameKey, loginResult.userName ?? ''),
