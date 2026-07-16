@@ -4,6 +4,7 @@ import { getBackendOidcTokenUrl } from '../GetBackendOidcTokenUrl/GetBackendOidc
 
 export interface ExchangeAuthorizationCodeResult {
   readonly accessToken: string
+  readonly expiresIn: number | undefined
   readonly refreshToken: string
 }
 
@@ -46,6 +47,7 @@ export const exchangeAuthorizationCode = async (
   const tokenResponse = await processTokenEndpointResponse(authorizationServer, client, response)
   return {
     accessToken: tokenResponse.access_token,
+    expiresIn: typeof tokenResponse.expires_in === 'number' ? tokenResponse.expires_in : undefined,
     refreshToken: typeof tokenResponse.refresh_token === 'string' ? tokenResponse.refresh_token : '',
   }
 }

@@ -15,6 +15,7 @@ test('waitForElectronBackendLogin exchanges the authorization code for tokens wh
       exchangeCalls.push([backendUrl, code, redirectUri, codeVerifier])
       return {
         accessToken: 'access-token-1',
+        expiresIn: undefined,
         refreshToken: 'refresh-token-1',
       }
     },

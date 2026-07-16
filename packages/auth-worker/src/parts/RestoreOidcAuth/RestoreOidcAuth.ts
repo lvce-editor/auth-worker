@@ -1,4 +1,5 @@
 import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
+import { getAccessTokenExpiresAt } from '../AccessTokenExpiration/AccessTokenExpiration.ts'
 import { getOidcUserName } from '../GetOidcUserName/GetOidcUserName.ts'
 import { getStoredOidcClientId } from '../OidcAuthState/OidcAuthState.ts'
 import { clearPersistedAuthSession } from '../PersistedAuthSession/PersistedAuthSession.ts'
@@ -9,9 +10,16 @@ const clearStoredOidcAuth = async (): Promise<void> => {
   await clearPersistedAuthSession()
 }
 
-const toLoginResult = (accessToken: string, refreshToken: string, clientId: string, userName: string): LoginResult => {
+const toLoginResult = (
+  accessToken: string,
+  refreshToken: string,
+  clientId: string,
+  userName: string,
+  authAccessTokenExpiresAt?: number,
+): LoginResult => {
   return {
     authAccessToken: accessToken,
+    ...(authAccessTokenExpiresAt && { authAccessTokenExpiresAt }),
     authClientId: clientId,
     authErrorMessage: '',
     authRefreshToken: refreshToken,
@@ -32,7 +40,8 @@ export const restoreOidcAuth = async (backendUrl: string): Promise<LoginResult |
   try {
     const refreshedTokens = await refreshOidcTokens(backendUrl, clientId, refreshToken)
     const userName = await getOidcUserName(backendUrl, refreshedTokens.accessToken)
-    return toLoginResult(refreshedTokens.accessToken, refreshedTokens.refreshToken, clientId, userName)
+    const authAccessTokenExpiresAt = getAccessTokenExpiresAt(refreshedTokens.expiresIn)
+    return toLoginResult(refreshedTokens.accessToken, refreshedTokens.refreshToken, clientId, userName, authAccessTokenExpiresAt)
   } catch {
     if (accessToken) {
       const userName = await getOidcUserName(backendUrl, accessToken)

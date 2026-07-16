@@ -1,4 +1,5 @@
 import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
+import { setAuthBackendUrl } from '../AuthBackendUrl/AuthBackendUrl.ts'
 import { completeBrowserOidcLogin } from '../CompleteBrowserOidcLogin/CompleteBrowserOidcLogin.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 import { getPersistedAuthSession } from '../PersistedAuthSession/PersistedAuthSession.ts'
@@ -20,6 +21,7 @@ const getBackendUrl = (options: InitializeOptions | number): string => {
 
 export const initialize = async (options: InitializeOptions | number): Promise<LoginResult> => {
   const backendUrl = getBackendUrl(options)
+  setAuthBackendUrl(backendUrl)
   try {
     if (backendUrl) {
       const completedBrowserLogin = await completeBrowserOidcLogin(backendUrl)

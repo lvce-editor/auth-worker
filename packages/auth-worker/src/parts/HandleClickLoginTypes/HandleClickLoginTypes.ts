@@ -6,6 +6,7 @@ export interface LoginOptions {
 
 export interface LoginResult {
   readonly authAccessToken?: string
+  readonly authAccessTokenExpiresAt?: number
   readonly authClientId?: string
   readonly authCode?: string
   readonly authCodeVerifier?: string
