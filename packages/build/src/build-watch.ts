@@ -3,7 +3,7 @@ import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { root } from './root.ts'
 
-const esbuild = join(root, 'packages', 'build', 'node_modules', '.bin', 'esbuild')
+const esbuild = join(root, 'node_modules', '.bin', 'esbuild')
 
 const commonArgs = ['--format=esm', '--bundle', '--platform=node', '--watch']
 
