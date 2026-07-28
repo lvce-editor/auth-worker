@@ -1,7 +1,12 @@
+import { PlatformType } from '@lvce-editor/constants'
+import { getAuthPlatform } from '../AuthPlatform/AuthPlatform.ts'
+import * as SecretStorage from '../SecretStorage/SecretStorage.ts'
+
 const databaseName = 'auth-worker'
 const objectStoreName = 'auth'
 
 const memoryStorage = new Map<string, string>()
+const secretKeys = new Set(['accessToken', 'refreshToken'])
 
 interface PersistentAuthState {
   databasePromise: Promise<IDBDatabase | undefined> | undefined
@@ -63,7 +68,7 @@ const getDatabase = async (): Promise<IDBDatabase | undefined> => {
   return state.databasePromise
 }
 
-export const getPersistentAuthValue = async (key: string): Promise<string> => {
+const getIndexedDbValue = async (key: string): Promise<string> => {
   const database = await getDatabase()
   if (!database) {
     return memoryStorage.get(key) ?? ''
@@ -74,7 +79,7 @@ export const getPersistentAuthValue = async (key: string): Promise<string> => {
   return typeof value === 'string' ? value : ''
 }
 
-export const setPersistentAuthValue = async (key: string, value: string): Promise<void> => {
+const setIndexedDbValue = async (key: string, value: string): Promise<void> => {
   memoryStorage.set(key, value)
   const database = await getDatabase()
   if (!database) {
@@ -86,7 +91,7 @@ export const setPersistentAuthValue = async (key: string, value: string): Promis
   await transactionToPromise(transaction)
 }
 
-export const clearPersistentAuthValue = async (key: string): Promise<void> => {
+const clearIndexedDbValue = async (key: string): Promise<void> => {
   memoryStorage.delete(key)
   const database = await getDatabase()
   if (!database) {
@@ -96,4 +101,46 @@ export const clearPersistentAuthValue = async (key: string): Promise<void> => {
   const objectStore = transaction.objectStore(objectStoreName)
   objectStore.delete(key)
   await transactionToPromise(transaction)
+}
+
+const shouldUseSecretStorage = (key: string): boolean => {
+  return getAuthPlatform() === PlatformType.Electron && secretKeys.has(key)
+}
+
+export const getPersistentAuthValue = async (key: string): Promise<string> => {
+  if (!shouldUseSecretStorage(key)) {
+    return getIndexedDbValue(key)
+  }
+  const secret = await SecretStorage.getSecret(key)
+  if (secret) {
+    return secret
+  }
+  const legacyValue = await getIndexedDbValue(key)
+  if (!legacyValue) {
+    return ''
+  }
+  await SecretStorage.storeSecret(key, legacyValue)
+  await clearIndexedDbValue(key)
+  return legacyValue
+}
+
+export const setPersistentAuthValue = async (key: string, value: string): Promise<void> => {
+  if (!shouldUseSecretStorage(key)) {
+    await setIndexedDbValue(key, value)
+    return
+  }
+  if (value) {
+    await SecretStorage.storeSecret(key, value)
+  } else {
+    await SecretStorage.deleteSecret(key)
+  }
+  await clearIndexedDbValue(key)
+}
+
+export const clearPersistentAuthValue = async (key: string): Promise<void> => {
+  if (shouldUseSecretStorage(key)) {
+    await Promise.all([SecretStorage.deleteSecret(key), clearIndexedDbValue(key)])
+    return
+  }
+  await clearIndexedDbValue(key)
 }
