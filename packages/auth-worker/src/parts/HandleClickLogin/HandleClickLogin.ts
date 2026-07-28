@@ -1,6 +1,7 @@
 import { PlatformType } from '@lvce-editor/constants'
 import { OpenerWorker } from '@lvce-editor/rpc-registry'
 import type { LoginOptions, LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
+import { setAuthPlatform } from '../AuthPlatform/AuthPlatform.ts'
 import { getLoggedOutBackendAuthState, waitForBackendLogin } from '../BackendAuth/BackendAuth.ts'
 import { getAuthUseRedirect } from '../GetAuthUseRedirect/GetAuthUseRedirect.ts'
 import { getBackendLoginRequest } from '../GetBackendLoginRequest/GetBackendLoginRequest.ts'
@@ -62,6 +63,7 @@ const getInteractiveLoginResult = async (backendUrl: string, platform: number, s
 
 export const handleClickLogin = async (options: LoginOptions): Promise<LoginResult> => {
   const { backendUrl, platform } = options
+  setAuthPlatform(platform)
   if (!backendUrl) {
     return {
       authErrorMessage: 'Backend URL is missing.',
