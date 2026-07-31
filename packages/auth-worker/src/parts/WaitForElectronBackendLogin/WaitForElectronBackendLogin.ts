@@ -4,6 +4,7 @@ import { getAccessTokenExpiresAt } from '../AccessTokenExpiration/AccessTokenExp
 import { delay } from '../Delay/Delay.ts'
 import { exchangeElectronAuthorizationCode } from '../ExchangeElectronAuthorizationCode/ExchangeElectronAuthorizationCode.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
+import { getOidcUserName } from '../GetOidcUserName/GetOidcUserName.ts'
 
 const hasAuthorizationCode = (value: unknown): value is string => {
   return typeof value === 'string' && value.length > 0
@@ -27,6 +28,7 @@ export const waitForElectronBackendLogin = async (
     redirectUri: string,
     codeVerifier: string,
   ) => Promise<{ accessToken: string; expiresIn: number | undefined; refreshToken: string }> = exchangeElectronAuthorizationCode,
+  getUserName: (backendUrl: string, accessToken: string) => Promise<string> = getOidcUserName,
 ): Promise<LoginResult> => {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
@@ -34,11 +36,13 @@ export const waitForElectronBackendLogin = async (
     if (hasAuthorizationCode(authorizationCode)) {
       const tokenResponse = await exchangeAuthorizationCode(backendUrl, authorizationCode, redirectUri, codeVerifier)
       const authAccessTokenExpiresAt = getAccessTokenExpiresAt(tokenResponse.expiresIn)
+      const userName = await getUserName(backendUrl, tokenResponse.accessToken)
       return {
         authAccessToken: tokenResponse.accessToken,
         ...(authAccessTokenExpiresAt && { authAccessTokenExpiresAt }),
         authErrorMessage: '',
         authRefreshToken: tokenResponse.refreshToken,
+        userName,
         userState: tokenResponse.accessToken ? 'loggedIn' : 'loggedOut',
       }
     }
