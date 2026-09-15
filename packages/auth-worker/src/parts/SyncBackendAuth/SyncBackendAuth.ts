@@ -54,7 +54,7 @@ export const syncBackendAuth = async (backendUrl: string): Promise<LoginResult> 
     if (!parsed.authAccessToken) {
       return getLoggedOutBackendAuthState()
     }
-    return parsed
+    return persistLoginResult(parsed)
   } catch (error) {
     const authErrorMessage = error instanceof Error && error.message ? error.message : 'Backend authentication failed.'
     return getLoggedOutBackendAuthState(authErrorMessage)
