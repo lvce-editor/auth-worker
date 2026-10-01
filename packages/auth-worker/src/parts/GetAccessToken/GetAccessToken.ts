@@ -23,7 +23,8 @@ export const getAccessToken = async (
   const [clientId, refreshToken] = await Promise.all([getStoredOidcClientId(), getPersistentAuthValue('refreshToken')])
   const backendUrl = getAuthBackendUrl()
   if (!backendUrl || !clientId || !refreshToken) {
-    return accessToken
+    const expiresAt = Number(accessTokenExpiresAt)
+    return accessTokenExpiresAt && Number.isFinite(expiresAt) && expiresAt <= now ? '' : accessToken
   }
   const refreshedTokens = await refreshTokens(backendUrl, clientId, refreshToken)
   const expiresAt = getAccessTokenExpiresAt(refreshedTokens.expiresIn, now)
