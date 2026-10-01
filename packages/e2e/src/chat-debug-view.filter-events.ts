@@ -4,7 +4,7 @@ export const name = 'auth-worker.filter-events'
 
 export const skip = 1
 
-export const test: Test = async ({ Command, expect, Locator }) => {
+export const test: Test = async ({ ChatDebug, Command, expect, Locator }) => {
   // arrange
   await Command.execute('Main.openUri', 'chat-tool://e2e-session-filter')
   const tool = Locator('.chatTool')
@@ -31,10 +31,9 @@ export const test: Test = async ({ Command, expect, Locator }) => {
     },
   ]
   await Command.execute('chatTool.setEvents', events)
-  const filterInput = Locator('.InputBox[name="filter"]')
 
   // act
-  await filterInput.type('beta')
+  await ChatDebug.setFilter('beta')
 
   // assert
   const eventNodes = Locator('.chatToolEvent')
