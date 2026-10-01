@@ -1,8 +1,7 @@
 import { PlatformType } from '@lvce-editor/constants'
 import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
-import { setAuthBackendUrl } from '../AuthBackendUrl/AuthBackendUrl.ts'
-import { setAuthPlatform } from '../AuthPlatform/AuthPlatform.ts'
 import { completeBrowserOidcLogin } from '../CompleteBrowserOidcLogin/CompleteBrowserOidcLogin.ts'
+import { configure } from '../Configure/Configure.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 import { getPersistedAuthSession } from '../PersistedAuthSession/PersistedAuthSession.ts'
 import { persistLoginResult } from '../PersistLoginResult/PersistLoginResult.ts'
@@ -27,8 +26,7 @@ const getPlatform = (options: InitializeOptions | number): number => {
 
 export const initialize = async (options: InitializeOptions | number): Promise<LoginResult> => {
   const backendUrl = getBackendUrl(options)
-  setAuthBackendUrl(backendUrl)
-  setAuthPlatform(getPlatform(options))
+  configure({ backendUrl, platform: getPlatform(options) })
   try {
     if (backendUrl) {
       const completedBrowserLogin = await completeBrowserOidcLogin(backendUrl)
