@@ -72,3 +72,19 @@ test('returns the stored token when refresh metadata is unavailable', async () =
     }),
   ).resolves.toBe('legacy-token')
 })
+
+test.each(['refreshToken', 'clientId', 'backendUrl'])('does not return a known expired token when %s is missing', async (missing) => {
+  setAuthBackendUrl(missing === 'backendUrl' ? '' : 'https://api.example.com/')
+  await Promise.all([
+    setPersistentAuthValue('accessToken', 'expired-token'),
+    setPersistentAuthValue('accessTokenExpiresAt', '1000'),
+    setPersistentAuthValue('refreshToken', missing === 'refreshToken' ? '' : 'refresh-token'),
+    ...(missing === 'clientId' ? [] : [saveOidcClientId('lvce-editor-web')]),
+  ])
+  const refreshTokens = async (): Promise<never> => {
+    throw new Error('refresh should not be called without credentials')
+  }
+
+  await expect(getAccessToken({ refresh: 'if-needed' }, refreshTokens, 2000)).resolves.toBe('')
+  await expect(getAccessToken()).resolves.toBe('expired-token')
+})
