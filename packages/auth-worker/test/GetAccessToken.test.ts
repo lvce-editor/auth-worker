@@ -98,7 +98,7 @@ test('forces refresh of a server-rejected token before its recorded expiry', asy
     saveOidcClientId('lvce-editor-web'),
   ])
   let calls = 0
-  const refreshTokens = async () => {
+  const refreshTokens = async (): Promise<{ accessToken: string; expiresIn: number; refreshToken: string }> => {
     calls++
     return { accessToken: 'fresh-token', expiresIn: 3600, refreshToken: 'refresh-2' }
   }
