@@ -1,10 +1,7 @@
 import { RpcId } from '@lvce-editor/constants'
+import { getAccessToken, getAccounts, initialize, login, logout, removeAccount, syncBackendAuth, useAccount } from '../AccountAuth/AccountAuth.ts'
 import { configure } from '../Configure/Configure.ts'
-import { getAccessToken } from '../GetAccessToken/GetAccessToken.ts'
 import { handleMessagePort } from '../HandleMessagePort/HandleMessagePort.ts'
-import { initialize } from '../Initialize/Initialize.ts'
-import { handleClickLogin } from '../Login/Login.ts'
-import { logout } from '../Logout/Logout.ts'
 import {
   clear,
   consumeNextLoginResponse,
@@ -14,7 +11,6 @@ import {
   setNextLoginResponse,
   setNextRefreshResponse,
 } from '../MockBackendAuth/MockBackendAuth.ts'
-import { syncBackendAuth } from '../SyncBackendAuth/SyncBackendAuth.ts'
 
 export const commandMap = {
   'Auth.clearMocks': clear,
@@ -22,14 +18,17 @@ export const commandMap = {
   'Auth.consumeNextLoginResponse': consumeNextLoginResponse,
   'Auth.consumeNextRefreshResponse': consumeNextRefreshResponse,
   'Auth.getAccessToken': getAccessToken,
+  'Auth.getAccounts': getAccounts,
   'Auth.hasPendingMockLoginResponse': hasPendingMockLoginResponse,
   'Auth.hasPendingMockRefreshResponse': hasPendingMockRefreshResponse,
   'Auth.initialize': initialize,
-  'Auth.login': handleClickLogin,
+  'Auth.login': login,
   'Auth.logout': logout,
+  'Auth.removeAccount': removeAccount,
   'Auth.setNextLoginResponse': setNextLoginResponse,
   'Auth.setNextRefreshResponse': setNextRefreshResponse,
   'Auth.syncBackendAuth': syncBackendAuth,
+  'Auth.useAccount': useAccount,
   'HandleMessagePort.handleMessagePort': handleMessagePort,
   initialize: (_: string, port: MessagePort): Promise<void> => handleMessagePort(port, RpcId.RendererWorker),
 }

@@ -6,7 +6,7 @@ const databaseName = 'auth-worker'
 const objectStoreName = 'auth'
 
 const memoryStorage = new Map<string, string>()
-const secretKeys = new Set(['accessToken', 'refreshToken'])
+const secretKeys = new Set(['accessToken', 'refreshToken', 'accountSessions'])
 
 interface PersistentAuthState {
   databasePromise: Promise<IDBDatabase | undefined> | undefined
