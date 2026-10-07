@@ -3,6 +3,7 @@ import { OpenerWorker } from '@lvce-editor/rpc-registry'
 import type { LoginOptions, LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
 import { setAuthPlatform } from '../AuthPlatform/AuthPlatform.ts'
 import { getLoggedOutBackendAuthState, waitForBackendLogin } from '../BackendAuth/BackendAuth.ts'
+import { getAccountLoginUrl } from '../GetAccountLoginUrl/GetAccountLoginUrl.ts'
 import { getAuthUseRedirect } from '../GetAuthUseRedirect/GetAuthUseRedirect.ts'
 import { getBackendLoginRequest } from '../GetBackendLoginRequest/GetBackendLoginRequest.ts'
 import { getLoggedInState } from '../GetLoggedInState/GetLoggedInState.ts'
@@ -12,7 +13,7 @@ import { clearPendingOidcAuthState, savePendingOidcAuthState } from '../OidcAuth
 import { persistLoginResult } from '../PersistLoginResult/PersistLoginResult.ts'
 import { waitForElectronBackendLogin } from '../WaitForElectronBackendLogin/WaitForElectronBackendLogin.ts'
 
-const getMockLoginResult = async (signingInState: LoginResult): Promise<LoginResult | undefined> => {
+const getMockLoginResult = async (signingInState: LoginResult, persistResult: typeof persistLoginResult): Promise<LoginResult | undefined> => {
   if (!MockBackendAuth.hasPendingMockLoginResponse()) {
     return undefined
   }
@@ -29,10 +30,16 @@ const getMockLoginResult = async (signingInState: LoginResult): Promise<LoginRes
       userState: 'loggedOut',
     }
   }
-  return persistLoginResult(getLoggedInState(signingInState, response))
+  return persistResult(getLoggedInState(signingInState, response))
 }
 
-const getInteractiveLoginResult = async (backendUrl: string, platform: number, signingInState: LoginResult): Promise<LoginResult> => {
+const getInteractiveLoginResult = async (
+  backendUrl: string,
+  platform: number,
+  signingInState: LoginResult,
+  persistResult: typeof persistLoginResult,
+  selectAccount: boolean,
+): Promise<LoginResult> => {
   const authUseRedirect = getAuthUseRedirect(platform)
   const uid = 0
   const { clientId, codeVerifier, loginUrl, redirectUri, state } = await getBackendLoginRequest(backendUrl, platform, uid)
@@ -44,7 +51,7 @@ const getInteractiveLoginResult = async (backendUrl: string, platform: number, s
       state,
     })
   }
-  await OpenerWorker.invoke('Open.openUrl', loginUrl, platform, authUseRedirect)
+  await OpenerWorker.invoke('Open.openUrl', selectAccount ? getAccountLoginUrl(backendUrl, loginUrl) : loginUrl, platform, authUseRedirect)
   if (platform !== PlatformType.Electron && authUseRedirect) {
     return signingInState
   }
@@ -55,13 +62,16 @@ const getInteractiveLoginResult = async (backendUrl: string, platform: number, s
   if (platform !== PlatformType.Electron) {
     await clearPendingOidcAuthState()
   }
-  return persistLoginResult({
+  return persistResult({
     ...authState,
     authClientId: clientId,
   })
 }
 
-export const handleClickLogin = async (options: LoginOptions): Promise<LoginResult> => {
+export const handleClickLogin = async (
+  options: LoginOptions,
+  persistResult: typeof persistLoginResult = persistLoginResult,
+): Promise<LoginResult> => {
   const { backendUrl, platform } = options
   setAuthPlatform(platform)
   if (!backendUrl) {
@@ -75,11 +85,11 @@ export const handleClickLogin = async (options: LoginOptions): Promise<LoginResu
     userState: 'loggingIn',
   }
   try {
-    const mockLoginResult = await getMockLoginResult(signingInState)
+    const mockLoginResult = await getMockLoginResult(signingInState, persistResult)
     if (mockLoginResult) {
       return mockLoginResult
     }
-    return getInteractiveLoginResult(backendUrl, platform, signingInState)
+    return getInteractiveLoginResult(backendUrl, platform, signingInState, persistResult, options.selectAccount === true)
   } catch (error) {
     await clearPendingOidcAuthState()
     const errorMessage = error instanceof Error && error.message ? error.message : 'Backend authentication failed.'

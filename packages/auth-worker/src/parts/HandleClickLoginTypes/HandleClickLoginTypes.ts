@@ -2,6 +2,7 @@ export interface LoginOptions {
   readonly authUseRedirect?: boolean
   readonly backendUrl: string
   readonly platform: number
+  readonly selectAccount?: boolean
 }
 
 export interface LoginResult {
