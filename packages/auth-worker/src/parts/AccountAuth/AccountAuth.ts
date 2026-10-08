@@ -130,6 +130,58 @@ export interface AccountSummary extends AccountProfile {
   readonly signedIn: boolean
 }
 
+export interface ConnectedAccount {
+  readonly id: string
+  readonly name: string
+  readonly provider: string
+}
+
+const getConnectedAccountsUrl = (backendUrl: string): URL => new URL('/account/connections', backendUrl)
+
+const getConnectedAccountDisconnectUrl = (backendUrl: string, provider: string): URL =>
+  new URL(`/account/connections/${encodeURIComponent(provider)}/disconnect`, backendUrl)
+
+const getConnectionRequestHeaders = (accessToken: string): HeadersInit => {
+  return {
+    Accept: 'application/json',
+    Authorization: `Bearer ${accessToken}`,
+  }
+}
+
+export const getConnectedAccounts = async (): Promise<readonly ConnectedAccount[]> => {
+  const backendUrl = await ensureMigrated()
+  const accessToken = await getAccessToken({ refresh: 'if-needed' })
+  if (!accessToken) {
+    return []
+  }
+  const response = await fetch(getConnectedAccountsUrl(backendUrl), {
+    headers: getConnectionRequestHeaders(accessToken),
+  })
+  if (!response.ok) {
+    throw new Error(`Unable to load connected accounts (${response.status}).`)
+  }
+  const payload: unknown = await response.json()
+  if (!payload || typeof payload !== 'object' || !Array.isArray((payload as { connections?: unknown }).connections)) {
+    throw new Error('Backend returned invalid connected accounts.')
+  }
+  return (payload as { connections: ConnectedAccount[] }).connections
+}
+
+export const disconnectConnectedAccount = async (provider: string): Promise<void> => {
+  const backendUrl = await ensureMigrated()
+  const accessToken = await getAccessToken({ refresh: 'if-needed' })
+  if (!accessToken) {
+    throw new Error('Sign in to disconnect connected accounts.')
+  }
+  const response = await fetch(getConnectedAccountDisconnectUrl(backendUrl, provider), {
+    headers: getConnectionRequestHeaders(accessToken),
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw new Error(`Unable to disconnect ${provider} (${response.status}).`)
+  }
+}
+
 export const getAccounts = async (): Promise<readonly AccountSummary[]> => {
   const backendUrl = await ensureMigrated()
   const registry = await accounts.read()
