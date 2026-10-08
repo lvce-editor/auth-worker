@@ -98,11 +98,10 @@ test('loads and disconnects connected provider accounts using only the active be
     expect(await AccountAuth.getConnectedAccounts()).toEqual([{ id: 'openrouter', name: 'OpenRouter', provider: 'OpenRouter' }])
     await AccountAuth.disconnectConnectedAccount('openrouter')
     expect(await AccountAuth.getConnectedAccounts()).toEqual([])
-    expect(fetchMock.mock.calls.map(([input]) => (input instanceof URL ? input.pathname : String(input)))).toEqual([
-      '/account/connections',
-      '/account/connections/openrouter/disconnect',
-      '/account/connections',
-    ])
+    const [listCall, disconnectCall, refreshedListCall] = fetchMock.mock.calls
+    expect((listCall[0] as Readonly<URL>).pathname).toBe('/account/connections')
+    expect((disconnectCall[0] as Readonly<URL>).pathname).toBe('/account/connections/openrouter/disconnect')
+    expect((refreshedListCall[0] as Readonly<URL>).pathname).toBe('/account/connections')
   } finally {
     fetchMock.mockRestore()
   }
