@@ -12,6 +12,7 @@ export const getAccountProfile = async (backendUrl: string, accessToken: string,
     throw new Error('The backend did not return an account identity.')
   }
   return {
+    ...(typeof value.avatarUrl === 'string' && { avatarUrl: value.avatarUrl }),
     displayName: typeof value.displayName === 'string' ? value.displayName : '',
     email: typeof value.email === 'string' ? value.email : '',
     id: value.id,

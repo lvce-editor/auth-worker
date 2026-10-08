@@ -1,6 +1,7 @@
 import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
 
 export interface AccountProfile {
+  readonly avatarUrl?: string
   readonly displayName: string
   readonly email: string
   readonly id: string
