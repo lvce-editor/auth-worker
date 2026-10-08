@@ -5,12 +5,14 @@ const clientIdKey = 'oidcClientId'
 const pendingClientIdKey = 'pendingOidcClientId'
 const pendingCodeVerifierKey = 'pendingOidcCodeVerifier'
 const pendingRedirectUriKey = 'pendingOidcRedirectUri'
+const pendingReturnUrlKey = 'pendingOidcReturnUrl'
 const pendingStateKey = 'pendingOidcState'
 
 export interface PendingOidcAuthState {
   readonly clientId: string
   readonly codeVerifier: string
   readonly redirectUri: string
+  readonly returnUrl: string
   readonly state: string
 }
 
@@ -27,6 +29,7 @@ export const clearPendingOidcAuthState = async (): Promise<void> => {
     clearPersistentAuthValue(pendingClientIdKey),
     clearPersistentAuthValue(pendingCodeVerifierKey),
     clearPersistentAuthValue(pendingRedirectUriKey),
+    clearPersistentAuthValue(pendingReturnUrlKey),
     clearPersistentAuthValue(pendingStateKey),
   ])
 }
@@ -40,10 +43,11 @@ export const getStoredOidcClientId = async (): Promise<string> => {
 }
 
 export const loadPendingOidcAuthState = async (): Promise<PendingOidcAuthState | undefined> => {
-  const [clientId, codeVerifier, redirectUri, state] = await Promise.all([
+  const [clientId, codeVerifier, redirectUri, returnUrl, state] = await Promise.all([
     getPersistentAuthValue(pendingClientIdKey),
     getPersistentAuthValue(pendingCodeVerifierKey),
     getPersistentAuthValue(pendingRedirectUriKey),
+    getPersistentAuthValue(pendingReturnUrlKey),
     getPersistentAuthValue(pendingStateKey),
   ])
   if (!clientId || !codeVerifier || !redirectUri || !state) {
@@ -53,6 +57,7 @@ export const loadPendingOidcAuthState = async (): Promise<PendingOidcAuthState |
     clientId,
     codeVerifier,
     redirectUri,
+    returnUrl,
     state,
   }
 }
@@ -70,6 +75,7 @@ export const savePendingOidcAuthState = async (value: PendingOidcAuthState): Pro
     setPersistentAuthValue(pendingClientIdKey, value.clientId),
     setPersistentAuthValue(pendingCodeVerifierKey, value.codeVerifier),
     setPersistentAuthValue(pendingRedirectUriKey, value.redirectUri),
+    setPersistentAuthValue(pendingReturnUrlKey, value.returnUrl),
     setPersistentAuthValue(pendingStateKey, value.state),
   ])
 }

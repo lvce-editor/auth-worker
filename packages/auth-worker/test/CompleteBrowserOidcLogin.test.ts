@@ -3,6 +3,7 @@ import { completeBrowserOidcLogin } from '../src/parts/CompleteBrowserOidcLogin/
 import {
   clearOidcCallbackUrl,
   clearPendingOidcAuthState,
+  loadPendingOidcAuthState,
   saveOidcCallbackUrl,
   savePendingOidcAuthState,
 } from '../src/parts/OidcAuthState/OidcAuthState.ts'
@@ -25,7 +26,11 @@ test('completeBrowserOidcLogin exchanges the callback code from stored callback 
     clientId: 'lvce-editor-web',
     codeVerifier: 'verifier-1',
     redirectUri: 'https://client.test/auth/callback',
+    returnUrl: 'https://client.test/lvce-editor/settings?tab=accounts#current',
     state: 'state-1',
+  })
+  await expect(loadPendingOidcAuthState()).resolves.toMatchObject({
+    returnUrl: 'https://client.test/lvce-editor/settings?tab=accounts#current',
   })
   await saveOidcCallbackUrl('https://client.test/auth/callback?code=code-1&state=state-1')
 

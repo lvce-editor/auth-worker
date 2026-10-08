@@ -6,6 +6,7 @@ import { getLoggedOutBackendAuthState, waitForBackendLogin } from '../BackendAut
 import { getAccountLoginUrl } from '../GetAccountLoginUrl/GetAccountLoginUrl.ts'
 import { getAuthUseRedirect } from '../GetAuthUseRedirect/GetAuthUseRedirect.ts'
 import { getBackendLoginRequest } from '../GetBackendLoginRequest/GetBackendLoginRequest.ts'
+import { getCurrentHref } from '../GetCurrentHref/GetCurrentHref.ts'
 import { getLoggedInState } from '../GetLoggedInState/GetLoggedInState.ts'
 import { isLoginResponse } from '../IsLoginResponse/IsLoginResponse.ts'
 import * as MockBackendAuth from '../MockBackendAuth/MockBackendAuth.ts'
@@ -44,10 +45,12 @@ const getInteractiveLoginResult = async (
   const uid = 0
   const { clientId, codeVerifier, loginUrl, redirectUri, state } = await getBackendLoginRequest(backendUrl, platform, uid)
   if (platform !== PlatformType.Electron) {
+    const returnUrl = await getCurrentHref()
     await savePendingOidcAuthState({
       clientId,
       codeVerifier,
       redirectUri,
+      returnUrl,
       state,
     })
   }

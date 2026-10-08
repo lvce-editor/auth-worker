@@ -83,6 +83,7 @@ test('initialize completes a pending callback and persists the resulting auth se
     clientId: 'lvce-editor-web',
     codeVerifier: 'verifier-1',
     redirectUri: 'https://client.test/auth/callback',
+    returnUrl: 'https://client.test/lvce-editor/settings',
     state: 'state-1',
   })
   await saveOidcCallbackUrl('https://client.test/auth/callback?code=code-1&state=state-1')
