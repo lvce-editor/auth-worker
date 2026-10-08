@@ -66,6 +66,50 @@ test('RPC session lifecycle migrates, adds, switches, deduplicates and preserves
   }
 })
 
+test('loads and disconnects connected provider accounts using only the active bearer token', async () => {
+  setAuthBackendUrl(backendUrl)
+  const { setPersistentAuthValue } = await import('../src/parts/PersistentAuthValue/PersistentAuthValue.ts')
+  await setPersistentAuthValue(
+    'accountSessions',
+    JSON.stringify({
+      accounts: [
+        {
+          backendUrl,
+          id: `${backendUrl}/A`,
+          profile: { displayName: 'User A', email: '', id: 'A', provider: 'LVCE Editor' },
+          session: { authAccessToken: 'active-access', authErrorMessage: '', userState: 'loggedIn' },
+        },
+      ],
+      activeId: `${backendUrl}/A`,
+      revision: 0,
+    }),
+  )
+  let connected = true
+  const fetchMock = jest.spyOn(globalThis, 'fetch').mockImplementation(async (...args: readonly unknown[]): Promise<Response> => {
+    const input = args[0]
+    const url = input instanceof URL ? input.pathname : String(input)
+    const options = args[1] as { readonly headers: HeadersInit; readonly method?: string }
+    expect(new Headers(options.headers).get('Authorization')).toBe('Bearer active-access')
+    if (options.method === 'POST') {
+      connected = false
+      return Response.json({ disconnected: true })
+    }
+    return Response.json({ connections: connected ? [{ id: 'openrouter', name: 'OpenRouter', provider: 'OpenRouter' }] : [] })
+  })
+  try {
+    expect(await AccountAuth.getConnectedAccounts()).toEqual([{ id: 'openrouter', name: 'OpenRouter', provider: 'OpenRouter' }])
+    await AccountAuth.disconnectConnectedAccount('openrouter')
+    expect(await AccountAuth.getConnectedAccounts()).toEqual([])
+    expect(fetchMock.mock.calls.map(([input]) => (input instanceof URL ? input.pathname : String(input)))).toEqual([
+      '/account/connections',
+      '/account/connections/openrouter/disconnect',
+      '/account/connections',
+    ])
+  } finally {
+    fetchMock.mockRestore()
+  }
+})
+
 test('in-flight refresh returns the selected identity and deduplicates overlapping refreshes', async () => {
   const sessions = ['A', 'B'].map((id) => ({
     backendUrl,
