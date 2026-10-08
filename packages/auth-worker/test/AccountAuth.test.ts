@@ -86,8 +86,6 @@ test('loads and disconnects connected provider accounts using only the active be
   )
   let connected = true
   const fetchMock = jest.spyOn(globalThis, 'fetch').mockImplementation(async (...args: readonly unknown[]): Promise<Response> => {
-    const input = args[0]
-    const url = input instanceof URL ? input.pathname : String(input)
     const options = args[1] as { readonly headers: HeadersInit; readonly method?: string }
     expect(new Headers(options.headers).get('Authorization')).toBe('Bearer active-access')
     if (options.method === 'POST') {
