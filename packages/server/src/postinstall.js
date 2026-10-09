@@ -1,4 +1,4 @@
-import { cp, readFile, readdir, writeFile } from 'node:fs/promises'
+import { readFile, readdir, writeFile } from 'node:fs/promises'
 
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -25,25 +25,27 @@ const dirents = await readdir(serverStaticPath)
 const commitHash = dirents.find(isCommitHash) || ''
 const rendererWorkerMainPath = join(serverStaticPath, commitHash, 'packages', 'renderer-worker', 'dist', 'rendererWorkerMain.js')
 
-const content = await readFile(rendererWorkerMainPath, 'utf-8')
-
 const workerPath = join(root, '.tmp/dist-auth-worker/dist/authWorkerMain.js')
+const remoteUrl = getRemoteUrl(workerPath)
 
-const replaceWorkerUrl = (currentContent, variableName, packageName, workerMainName, localPath) => {
-  const remoteUrl = getRemoteUrl(localPath)
-  const occurrence = `const ${variableName} = \`\${assetDir}/packages/${packageName}/dist/${workerMainName}\``
-  const replacement = `// const ${variableName} = \`\${assetDir}/packages/${packageName}/dist/${workerMainName}\`
-const ${variableName} = \`${remoteUrl}\``
-  if (!currentContent.includes(occurrence)) {
-    return currentContent
+const replace = async (path, occurrence, replacement) => {
+  const content = await readFile(path, 'utf8')
+  if (content.includes(replacement)) {
+    return
   }
-  return currentContent.replace(occurrence, replacement)
+  if (!content.includes(occurrence)) {
+    throw new Error(`Could not find expected auth worker URL in ${path}`)
+  }
+  await writeFile(path, content.replace(occurrence, replacement))
 }
 
-let newContent = content
-newContent = replaceWorkerUrl(newContent, 'authWorkerUrl', 'auth-worker', 'authWorkerMain.js', workerPath)
-
-if (newContent !== content) {
-  await cp(rendererWorkerMainPath, rendererWorkerMainPath + '.original')
-  await writeFile(rendererWorkerMainPath, newContent)
-}
+await replace(
+  rendererWorkerMainPath,
+  '`${assetDir}/packages/renderer-worker/node_modules/@lvce-editor/auth-worker/dist/authWorkerMain.js`',
+  `\`${remoteUrl}\``,
+)
+await replace(
+  join(serverStaticPath, 'index.html'),
+  `"develop.authWorkerPath": "/${commitHash}/packages/auth-worker/dist/authWorkerMain.js"`,
+  `"develop.authWorkerPath": "${remoteUrl}"`,
+)

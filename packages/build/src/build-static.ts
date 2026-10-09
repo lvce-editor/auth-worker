@@ -26,30 +26,22 @@ export const getRemoteUrl = (path: string): string => {
 const content = await readFile(rendererWorkerPath, 'utf8')
 const workerPath = join(root, '.tmp/dist-auth-worker/dist/authWorkerMain.js')
 
-const replaceRemoteUrlWithAssetUrl = (
-  currentContent: string,
-  variableName: string,
-  packageName: string,
-  workerMainName: string,
-  localPath: string,
-) => {
-  // @ts-ignore
-  const remoteUrl = getRemoteUrl(localPath)
-  const occurrence = `// const ${variableName} = \`\${assetDir}/packages/${packageName}/dist/${workerMainName}\`
-const ${variableName} = \`${remoteUrl}\``
-  const replacement = `const ${variableName} = \`\${assetDir}/packages/${packageName}/dist/${workerMainName}\``
-  if (!currentContent.includes(occurrence)) {
-    return currentContent
-  }
-  return currentContent.replace(occurrence, replacement)
+const remoteUrl = getRemoteUrl(workerPath)
+const occurrence = `\`${remoteUrl}\``
+const replacement = '`${assetDir}/packages/auth-worker/dist/authWorkerMain.js`'
+if (!content.includes(occurrence)) {
+  throw new Error('Could not find development auth worker URL in static renderer')
 }
+await writeFile(rendererWorkerPath, content.replace(occurrence, replacement))
 
-let newContent = content
-newContent = replaceRemoteUrlWithAssetUrl(newContent, 'authWorkerUrl', 'auth-worker', 'authWorkerMain.js', workerPath)
-
-// if (newContent === content) {
-//   throw new Error('occurrence not found')
-// }
-await writeFile(rendererWorkerPath, newContent)
+const indexPath = join(root, 'dist', 'index.html')
+const indexContent = await readFile(indexPath, 'utf8')
+const indexOccurrence = `"develop.authWorkerPath": "${remoteUrl}"`
+const indexReplacement = `"develop.authWorkerPath": "/auth-worker/${commitHash}/packages/auth-worker/dist/authWorkerMain.js"`
+if (!indexContent.includes(indexOccurrence)) {
+  throw new Error('Could not find development auth worker URL in static configuration')
+}
+await writeFile(indexPath, indexContent.replace(indexOccurrence, indexReplacement))
+await cp(workerPath, join(root, 'dist', commitHash, 'packages', 'auth-worker', 'dist', 'authWorkerMain.js'))
 
 await cp(join(root, 'dist'), join(root, '.tmp', 'static'), { recursive: true })
