@@ -5,7 +5,7 @@ import type { RefreshOidcTokensResult } from '../src/parts/RefreshOidcTokens/Ref
 import { configure } from '../src/parts/Configure/Configure.ts'
 import { getAccessToken } from '../src/parts/GetAccessToken/GetAccessToken.ts'
 import { clearStoredOidcClientId, saveOidcClientId } from '../src/parts/OidcAuthState/OidcAuthState.ts'
-import { clearPersistentAuthValue, setPersistentAuthValue } from '../src/parts/PersistentAuthValue/PersistentAuthValue.ts'
+import { clearPersistentAuthValue, getPersistentAuthValue, setPersistentAuthValue } from '../src/parts/PersistentAuthValue/PersistentAuthValue.ts'
 
 afterEach(async () => {
   await configure({ backendUrl: '', platform: PlatformType.Web })
@@ -37,4 +37,20 @@ test('configures lazy token access to refresh an Electron secret without restori
     ['SecretStorage.store', 'lvce-editor.auth', 'accessToken', 'fresh-secret'],
     ['SecretStorage.store', 'lvce-editor.auth', 'refreshToken', 'rotated-secret'],
   ])
+})
+
+test('uses browser storage without accessing Electron secret storage on web', async () => {
+  using mockMainProcessRpc = MainProcess.registerMockRpc({
+    'SecretStorage.get'(): string {
+      throw new Error('Electron secret storage should not be accessed on web.')
+    },
+    'SecretStorage.store'() {
+      throw new Error('Electron secret storage should not be accessed on web.')
+    },
+  })
+  await configure({ backendUrl: 'https://api.example.com', platform: PlatformType.Web })
+
+  await setPersistentAuthValue('accessToken', 'browser-token')
+  await expect(getPersistentAuthValue('accessToken')).resolves.toBe('browser-token')
+  expect(mockMainProcessRpc.invocations).toEqual([])
 })
