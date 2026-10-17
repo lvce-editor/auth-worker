@@ -8,19 +8,19 @@ import { clearStoredOidcClientId, saveOidcClientId } from '../src/parts/OidcAuth
 import { clearPersistentAuthValue, setPersistentAuthValue } from '../src/parts/PersistentAuthValue/PersistentAuthValue.ts'
 
 afterEach(async () => {
-  configure({ backendUrl: '', platform: PlatformType.Web })
+  await configure({ backendUrl: '', platform: PlatformType.Web })
   await clearStoredOidcClientId()
   await clearPersistentAuthValue('accessTokenExpiresAt')
 })
 
 test('configures lazy token access to refresh an Electron secret without restoring a session', async () => {
+  await configure({ backendUrl: 'https://api.example.com', platform: PlatformType.Electron })
   using mockMainProcessRpc = MainProcess.registerMockRpc({
     'SecretStorage.get'(_storageId: string, key: string): string {
       return key === 'accessToken' ? 'expired-secret' : 'refresh-secret'
     },
     'SecretStorage.store'() {},
   })
-  configure({ backendUrl: 'https://api.example.com', platform: PlatformType.Electron })
   expect(mockMainProcessRpc.invocations).toEqual([])
   await Promise.all([saveOidcClientId('client'), setPersistentAuthValue('accessTokenExpiresAt', '1000')])
   const refreshCalls: Array<readonly [string, string, string]> = []
