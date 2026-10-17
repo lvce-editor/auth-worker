@@ -5,22 +5,22 @@ import type { RefreshOidcTokensResult } from '../src/parts/RefreshOidcTokens/Ref
 import { configure } from '../src/parts/Configure/Configure.ts'
 import { getAccessToken } from '../src/parts/GetAccessToken/GetAccessToken.ts'
 import { clearStoredOidcClientId, saveOidcClientId } from '../src/parts/OidcAuthState/OidcAuthState.ts'
-import { clearPersistentAuthValue, setPersistentAuthValue } from '../src/parts/PersistentAuthValue/PersistentAuthValue.ts'
+import { clearPersistentAuthValue, getPersistentAuthValue, setPersistentAuthValue } from '../src/parts/PersistentAuthValue/PersistentAuthValue.ts'
 
 afterEach(async () => {
-  configure({ backendUrl: '', platform: PlatformType.Web })
+  await configure({ backendUrl: '', platform: PlatformType.Web })
   await clearStoredOidcClientId()
   await clearPersistentAuthValue('accessTokenExpiresAt')
 })
 
 test('configures lazy token access to refresh an Electron secret without restoring a session', async () => {
+  await configure({ backendUrl: 'https://api.example.com', platform: PlatformType.Electron })
   using mockMainProcessRpc = MainProcess.registerMockRpc({
     'SecretStorage.get'(_storageId: string, key: string): string {
       return key === 'accessToken' ? 'expired-secret' : 'refresh-secret'
     },
     'SecretStorage.store'() {},
   })
-  configure({ backendUrl: 'https://api.example.com', platform: PlatformType.Electron })
   expect(mockMainProcessRpc.invocations).toEqual([])
   await Promise.all([saveOidcClientId('client'), setPersistentAuthValue('accessTokenExpiresAt', '1000')])
   const refreshCalls: Array<readonly [string, string, string]> = []
@@ -37,4 +37,20 @@ test('configures lazy token access to refresh an Electron secret without restori
     ['SecretStorage.store', 'lvce-editor.auth', 'accessToken', 'fresh-secret'],
     ['SecretStorage.store', 'lvce-editor.auth', 'refreshToken', 'rotated-secret'],
   ])
+})
+
+test('uses browser storage without accessing Electron secret storage on web', async () => {
+  using mockMainProcessRpc = MainProcess.registerMockRpc({
+    'SecretStorage.get'(): string {
+      throw new Error('Electron secret storage should not be accessed on web.')
+    },
+    'SecretStorage.store'() {
+      throw new Error('Electron secret storage should not be accessed on web.')
+    },
+  })
+  await configure({ backendUrl: 'https://api.example.com', platform: PlatformType.Web })
+
+  await setPersistentAuthValue('accessToken', 'browser-token')
+  await expect(getPersistentAuthValue('accessToken')).resolves.toBe('browser-token')
+  expect(mockMainProcessRpc.invocations).toEqual([])
 })
