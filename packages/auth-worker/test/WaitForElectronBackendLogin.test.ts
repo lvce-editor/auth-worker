@@ -36,3 +36,17 @@ test('waitForElectronBackendLogin exchanges the authorization code for tokens wh
   expect(exchangeCalls).toEqual([['https://api.example.com', 'auth-code-1', 'http://localhost:43123/callback', 'verifier-1']])
   expect(userNameCalls).toEqual([['https://api.example.com', 'access-token-1']])
 })
+
+test('a callback RPC that never resolves still times out', async () => {
+  const result = await waitForElectronBackendLogin(
+    'https://api.example.com',
+    'native-session',
+    'http://localhost:43123/callback',
+    'verifier',
+    10,
+    1,
+    () => new Promise(() => {}),
+  )
+  expect(result.userState).toBe('loggedOut')
+  expect(result.authErrorMessage).toBe('Timed out waiting for backend login.')
+})

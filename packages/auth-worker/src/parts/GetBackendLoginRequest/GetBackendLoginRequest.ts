@@ -16,7 +16,7 @@ export interface BackendLoginRequest {
 export const getBackendLoginRequest = async (
   backendUrl: string,
   platform = 0,
-  uid = 0,
+  uid: number | string = 0,
   redirectUri = '',
   createPkceValuesFn: () => Promise<{ codeChallenge: string; codeVerifier: string }> = createPkceValues,
   createRandomUuid: () => string = () => globalThis.crypto.randomUUID(),
