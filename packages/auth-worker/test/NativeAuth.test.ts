@@ -87,3 +87,32 @@ test('browser launch failure leaves logged-out state, disposes the listener, and
   expect(new Set(ids).size).toBe(2)
   expect(opener.invocations).toHaveLength(2)
 })
+
+test('abandoning the external browser times out and disposes the callback listener', async () => {
+  await configure({ backendUrl, platform: PlatformType.Web, useNativeAuth: true })
+  jest.useFakeTimers()
+  try {
+    const callback = Promise.withResolvers<void>()
+    using auth = AuthProcess.registerMockRpc({
+      'OAuthServer.create'(): number {
+        return 43123
+      },
+      'OAuthServer.getCode'(): Promise<never> {
+        callback.resolve()
+        return new Promise(() => {})
+      },
+      'OAuthServer.dispose'(): void {},
+    })
+    using opener = OpenerWorker.registerMockRpc({ 'Open.openUrl'(): void {} })
+    const login = handleClickLogin({ backendUrl, platform: PlatformType.Web })
+    await callback.promise
+    await jest.advanceTimersByTimeAsync(31_000)
+    const result = await login
+    expect(result.userState).toBe('loggedOut')
+    expect(result.authErrorMessage).toBe('Timed out waiting for backend login.')
+    expect(auth.invocations.at(-1)?.[0]).toBe('OAuthServer.dispose')
+    expect(opener.invocations).toHaveLength(1)
+  } finally {
+    jest.useRealTimers()
+  }
+})

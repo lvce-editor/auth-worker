@@ -32,13 +32,14 @@ export const waitForElectronBackendLogin = async (
 ): Promise<LoginResult> => {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
-    let timer: ReturnType<typeof setTimeout> | undefined
+    let cancelTimeout = (): void => {}
     const authorizationCode = await Promise.race([
       getAuthorizationCode(uid),
       new Promise<undefined>((resolve) => {
-        timer = setTimeout(resolve, Math.max(0, deadline - Date.now()))
+        const timer = setTimeout(resolve, Math.max(0, deadline - Date.now()))
+        cancelTimeout = () => clearTimeout(timer)
       }),
-    ]).finally(() => clearTimeout(timer))
+    ]).finally(() => cancelTimeout())
     if (hasAuthorizationCode(authorizationCode)) {
       const tokenResponse = await exchangeAuthorizationCode(backendUrl, authorizationCode, redirectUri, codeVerifier)
       const authAccessTokenExpiresAt = getAccessTokenExpiresAt(tokenResponse.expiresIn)
