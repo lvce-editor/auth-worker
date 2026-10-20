@@ -21,14 +21,14 @@ test('native web shell uses the loopback client and persists tokens without Elec
   using auth = AuthProcess.registerMockRpc({
     'OAuthServer.create'(id: string): number {
       sessionId = id
-      return 43123
+      return 43_123
+    },
+    'OAuthServer.dispose'(id: string): void {
+      expect(id).toBe(sessionId)
     },
     'OAuthServer.getCode'(id: string): string {
       expect(id).toBe(sessionId)
       return 'callback-code'
-    },
-    'OAuthServer.dispose'(id: string): void {
-      expect(id).toBe(sessionId)
     },
   })
   using opener = OpenerWorker.registerMockRpc({
@@ -41,18 +41,16 @@ test('native web shell uses the loopback client and persists tokens without Elec
       expect(redirect).toBe(false)
     },
   })
-  const fetchMock = jest.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
-    if (String(input).endsWith('/oidc/token')) {
-      const body = new URLSearchParams(init?.body as URLSearchParams)
-      expect(body.get('code')).toBe('callback-code')
-      expect(body.get('client_id')).toBe('lvce-editor-native')
-      expect(body.get('redirect_uri')).toBe('http://localhost:43123/callback')
-      expect(body.get('code_verifier')).toBeTruthy()
-      return Response.json({ access_token: 'native-token', token_type: 'Bearer', refresh_token: 'refresh-token' })
-    }
-    return Response.json({ displayName: 'Native User' })
-  })
+  const fetchMock = jest
+    .spyOn(globalThis, 'fetch')
+    .mockResolvedValueOnce(Response.json({ access_token: 'native-token', refresh_token: 'refresh-token', token_type: 'Bearer' }))
+    .mockResolvedValueOnce(Response.json({ displayName: 'Native User' }))
   const result = await handleClickLogin({ backendUrl, platform: PlatformType.Web })
+  const body = new URLSearchParams(fetchMock.mock.calls[0]?.[1]?.body as URLSearchParams)
+  expect(body.get('code')).toBe('callback-code')
+  expect(body.get('client_id')).toBe('lvce-editor-native')
+  expect(body.get('redirect_uri')).toBe('http://localhost:43123/callback')
+  expect(body.get('code_verifier')).toBeTruthy()
   expect(result.userState).toBe('loggedIn')
   expect(result.authClientId).toBe('lvce-editor-native')
   expect(result.userName).toBe('Native User')
@@ -69,7 +67,7 @@ test('browser launch failure leaves logged-out state, disposes the listener, and
   using auth = AuthProcess.registerMockRpc({
     'OAuthServer.create'(id: string): number {
       ids.push(id)
-      return 43123
+      return 43_123
     },
     'OAuthServer.dispose'(): void {},
   })
@@ -95,13 +93,13 @@ test('abandoning the external browser times out and disposes the callback listen
     const callback = Promise.withResolvers<void>()
     using auth = AuthProcess.registerMockRpc({
       'OAuthServer.create'(): number {
-        return 43123
+        return 43_123
       },
+      'OAuthServer.dispose'(): void {},
       'OAuthServer.getCode'(): Promise<never> {
         callback.resolve()
         return new Promise(() => {})
       },
-      'OAuthServer.dispose'(): void {},
     })
     using opener = OpenerWorker.registerMockRpc({ 'Open.openUrl'(): void {} })
     const login = handleClickLogin({ backendUrl, platform: PlatformType.Web })
