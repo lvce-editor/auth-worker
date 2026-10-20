@@ -1,7 +1,7 @@
 import { PlatformType } from '@lvce-editor/constants'
-import { OpenerWorker } from '@lvce-editor/rpc-registry'
+import { AuthProcess, OpenerWorker } from '@lvce-editor/rpc-registry'
 import type { LoginOptions, LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
-import { setAuthPlatform } from '../AuthPlatform/AuthPlatform.ts'
+import { getUseNativeAuth, setAuthPlatform } from '../AuthPlatform/AuthPlatform.ts'
 import { getLoggedOutBackendAuthState, waitForBackendLogin } from '../BackendAuth/BackendAuth.ts'
 import { getAccountLoginUrl } from '../GetAccountLoginUrl/GetAccountLoginUrl.ts'
 import { getAuthUseRedirect } from '../GetAuthUseRedirect/GetAuthUseRedirect.ts'
@@ -41,34 +41,42 @@ const getInteractiveLoginResult = async (
   persistResult: typeof persistLoginResult,
   selectAccount: boolean,
 ): Promise<LoginResult> => {
-  const authUseRedirect = getAuthUseRedirect(platform)
-  const uid = 0
-  const { clientId, codeVerifier, loginUrl, redirectUri, state } = await getBackendLoginRequest(backendUrl, platform, uid)
-  if (platform !== PlatformType.Electron) {
-    const returnUrl = await getCurrentHref()
-    await savePendingOidcAuthState({
-      clientId,
-      codeVerifier,
-      redirectUri,
-      returnUrl,
-      state,
+  const nativeAuth = getUseNativeAuth()
+  const transportPlatform = nativeAuth ? PlatformType.Electron : platform
+  const authUseRedirect = getAuthUseRedirect(transportPlatform)
+  const uid = nativeAuth ? globalThis.crypto.randomUUID() : 0
+  try {
+    const { clientId, codeVerifier, loginUrl, redirectUri, state } = await getBackendLoginRequest(backendUrl, transportPlatform, uid)
+    if (transportPlatform !== PlatformType.Electron) {
+      const returnUrl = await getCurrentHref()
+      await savePendingOidcAuthState({
+        clientId,
+        codeVerifier,
+        redirectUri,
+        returnUrl,
+        state,
+      })
+    }
+    await OpenerWorker.invoke('Open.openUrl', selectAccount ? getAccountLoginUrl(backendUrl, loginUrl) : loginUrl, platform, authUseRedirect)
+    if (transportPlatform !== PlatformType.Electron && authUseRedirect) {
+      return signingInState
+    }
+    const authState =
+      transportPlatform === PlatformType.Electron
+        ? await waitForElectronBackendLogin(backendUrl, uid, redirectUri, codeVerifier)
+        : await waitForBackendLogin(backendUrl)
+    if (transportPlatform !== PlatformType.Electron) {
+      await clearPendingOidcAuthState()
+    }
+    return persistResult({
+      ...authState,
+      authClientId: clientId,
     })
+  } finally {
+    if (nativeAuth) {
+      await AuthProcess.invoke('OAuthServer.dispose', String(uid))
+    }
   }
-  await OpenerWorker.invoke('Open.openUrl', selectAccount ? getAccountLoginUrl(backendUrl, loginUrl) : loginUrl, platform, authUseRedirect)
-  if (platform !== PlatformType.Electron && authUseRedirect) {
-    return signingInState
-  }
-  const authState =
-    platform === PlatformType.Electron
-      ? await waitForElectronBackendLogin(backendUrl, uid, redirectUri, codeVerifier)
-      : await waitForBackendLogin(backendUrl)
-  if (platform !== PlatformType.Electron) {
-    await clearPendingOidcAuthState()
-  }
-  return persistResult({
-    ...authState,
-    authClientId: clientId,
-  })
 }
 
 export const handleClickLogin = async (
@@ -92,7 +100,7 @@ export const handleClickLogin = async (
     if (mockLoginResult) {
       return mockLoginResult
     }
-    return getInteractiveLoginResult(backendUrl, platform, signingInState, persistResult, options.selectAccount === true)
+    return await getInteractiveLoginResult(backendUrl, platform, signingInState, persistResult, options.selectAccount === true)
   } catch (error) {
     await clearPendingOidcAuthState()
     const errorMessage = error instanceof Error && error.message ? error.message : 'Backend authentication failed.'

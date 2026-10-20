@@ -10,18 +10,18 @@ const hasAuthorizationCode = (value: unknown): value is string => {
   return typeof value === 'string' && value.length > 0
 }
 
-const getElectronAuthorizationCode = async (uid: number): Promise<unknown> => {
+const getElectronAuthorizationCode = async (uid: number | string): Promise<unknown> => {
   return AuthProcess.invoke('OAuthServer.getCode', String(uid))
 }
 
 export const waitForElectronBackendLogin = async (
   backendUrl: string,
-  uid: number,
+  uid: number | string,
   redirectUri: string,
   codeVerifier: string,
   timeoutMs = 30_000,
   pollIntervalMs = 1000,
-  getAuthorizationCode: (uid: number) => Promise<unknown> = getElectronAuthorizationCode,
+  getAuthorizationCode: (uid: number | string) => Promise<unknown> = getElectronAuthorizationCode,
   exchangeAuthorizationCode: (
     backendUrl: string,
     code: string,
@@ -32,7 +32,16 @@ export const waitForElectronBackendLogin = async (
 ): Promise<LoginResult> => {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
-    const authorizationCode = await getAuthorizationCode(uid)
+    let timer: number | undefined
+    const timeout = new Promise<undefined>((resolve) => {
+      timer = setTimeout(resolve, Math.max(0, deadline - Date.now()))
+    })
+    let authorizationCode: unknown
+    try {
+      authorizationCode = await Promise.race([getAuthorizationCode(uid), timeout])
+    } finally {
+      clearTimeout(timer)
+    }
     if (hasAuthorizationCode(authorizationCode)) {
       const tokenResponse = await exchangeAuthorizationCode(backendUrl, authorizationCode, redirectUri, codeVerifier)
       const authAccessTokenExpiresAt = getAccessTokenExpiresAt(tokenResponse.expiresIn)

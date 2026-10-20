@@ -26,7 +26,7 @@ const getWebRedirectUri = async (): Promise<string> => {
   }
 }
 
-export const getEffectiveRedirectUri = async (platform: number, uid: number, redirectUri: string): Promise<string> => {
+export const getEffectiveRedirectUri = async (platform: number, uid: number | string, redirectUri: string): Promise<string> => {
   if (redirectUri) {
     return redirectUri
   }

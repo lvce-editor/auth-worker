@@ -11,6 +11,7 @@ export interface InitializeOptions {
   readonly backendUrl?: string
   readonly href?: string
   readonly platform?: number
+  readonly useNativeAuth?: boolean
 }
 
 const getBackendUrl = (options: InitializeOptions | number): string => {
@@ -26,7 +27,7 @@ const getPlatform = (options: InitializeOptions | number): number => {
 
 export const initialize = async (options: InitializeOptions | number): Promise<LoginResult> => {
   const backendUrl = getBackendUrl(options)
-  await configure({ backendUrl, platform: getPlatform(options) })
+  await configure({ backendUrl, platform: getPlatform(options), useNativeAuth: typeof options === 'object' && options.useNativeAuth === true })
   try {
     if (backendUrl) {
       const completedBrowserLogin = await completeBrowserOidcLogin(backendUrl)
