@@ -11,6 +11,12 @@ import {
   syncBackendAuth,
   useAccount,
 } from '../AccountAuth/AccountAuth.ts'
+import {
+  approveCloudflareMachine,
+  getCloudflareConnectionsUrl,
+  getCloudflareStatus,
+  getCloudflareZones,
+} from '../CloudflareConnections/CloudflareConnections.ts'
 import { configure } from '../Configure/Configure.ts'
 import { handleMessagePort } from '../HandleMessagePort/HandleMessagePort.ts'
 import {
@@ -24,6 +30,7 @@ import {
 } from '../MockBackendAuth/MockBackendAuth.ts'
 
 export const commandMap = {
+  'Auth.approveCloudflareMachine': approveCloudflareMachine,
   'Auth.clearMocks': clear,
   'Auth.configure': configure,
   'Auth.consumeNextLoginResponse': consumeNextLoginResponse,
@@ -31,6 +38,9 @@ export const commandMap = {
   'Auth.disconnectConnectedAccount': disconnectConnectedAccount,
   'Auth.getAccessToken': getAccessToken,
   'Auth.getAccounts': getAccounts,
+  'Auth.getCloudflareConnectionsUrl': getCloudflareConnectionsUrl,
+  'Auth.getCloudflareStatus': getCloudflareStatus,
+  'Auth.getCloudflareZones': getCloudflareZones,
   'Auth.getConnectedAccounts': getConnectedAccounts,
   'Auth.hasPendingMockLoginResponse': hasPendingMockLoginResponse,
   'Auth.hasPendingMockRefreshResponse': hasPendingMockRefreshResponse,
