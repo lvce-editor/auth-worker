@@ -44,11 +44,11 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.5.2",
-    "@lvce-editor/constants": "^5.30.0",
-    "@lvce-editor/rpc": "^6.21.1",
-    "@lvce-editor/rpc-registry": "^9.66.0",
+    "@lvce-editor/constants": "^5.31.1",
+    "@lvce-editor/rpc": "^6.22.0",
+    "@lvce-editor/rpc-registry": "^9.66.2",
     "jest": "^30.5.2",
     "oauth4webapi": "^3.8.8",
-    "ts-jest": "^29.4.14"
+    "ts-jest": "^29.4.15"
   }
 }
