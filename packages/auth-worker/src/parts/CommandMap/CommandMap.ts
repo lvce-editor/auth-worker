@@ -11,6 +11,7 @@ import {
   syncBackendAuth,
   useAccount,
 } from '../AccountAuth/AccountAuth.ts'
+import { getAuthBackendUrl } from '../AuthBackendUrl/AuthBackendUrl.ts'
 import {
   approveCloudflareMachine,
   getCloudflareConnectionsUrl,
@@ -38,6 +39,7 @@ export const commandMap = {
   'Auth.disconnectConnectedAccount': disconnectConnectedAccount,
   'Auth.getAccessToken': getAccessToken,
   'Auth.getAccounts': getAccounts,
+  'Auth.getBackendUrl': getAuthBackendUrl,
   'Auth.getCloudflareConnectionsUrl': getCloudflareConnectionsUrl,
   'Auth.getCloudflareStatus': getCloudflareStatus,
   'Auth.getCloudflareZones': getCloudflareZones,
