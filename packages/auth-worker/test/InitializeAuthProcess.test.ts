@@ -1,5 +1,5 @@
-import { expect, jest, test } from '@jest/globals'
 import type { Rpc } from '@lvce-editor/rpc'
+import { expect, jest, test } from '@jest/globals'
 import { AuthProcess, RendererWorker } from '@lvce-editor/rpc-registry'
 import { createAuthProcessRpc, initializeAuthProcess } from '../src/parts/InitializeAuthProcess/InitializeAuthProcess.ts'
 
@@ -57,10 +57,9 @@ test('unexpected peer closure rejects pending calls instead of leaving login cle
   })
   await initializeAuthProcess()
   const call = AuthProcess.invoke('pending')
-  const rejection = expect(call).rejects.toThrow('Auth process connection closed')
   const peer = await received.promise
   peer.close()
-  await rejection
+  await expect(call).rejects.toThrow('Auth process connection closed')
   await AuthProcess.dispose()
   expect(renderer.invocations).toHaveLength(1)
 })

@@ -6,13 +6,10 @@ const connect = async (): Promise<Rpc> => {
   const closed = Promise.withResolvers<Error>()
   const handleClose = (): void => closed.resolve(new Error('Auth process connection closed'))
   port2.addEventListener('close', handleClose, { once: true })
-  const raceClose = <T>(promise: Promise<T>): Promise<T> =>
-    Promise.race([
-      promise,
-      closed.promise.then((error) => {
-        throw error
-      }),
-    ])
+  const failOnClose = async (): Promise<never> => {
+    throw await closed.promise
+  }
+  const raceClose = (promise: Readonly<Promise<unknown>>): Promise<any> => Promise.race([promise, failOnClose()])
   try {
     await raceClose(
       RendererWorker.invokeAndTransfer(
@@ -28,8 +25,8 @@ const connect = async (): Promise<Rpc> => {
         port2.removeEventListener('close', handleClose)
         await rpc.dispose()
       },
-      invoke: (method, ...params) => raceClose(rpc.invoke(method, ...params)),
-      invokeAndTransfer: (method, ...params) => raceClose(rpc.invokeAndTransfer(method, ...params)),
+      invoke: (method: string, ...params: readonly unknown[]) => raceClose(rpc.invoke(method, ...params)),
+      invokeAndTransfer: (method: string, ...params: readonly unknown[]) => raceClose(rpc.invokeAndTransfer(method, ...params)),
       send: rpc.send,
     }
   } catch (error) {
@@ -58,15 +55,15 @@ export const createAuthProcessRpc = (create: () => Promise<Rpc> = connect): Rpc 
         await rpc.dispose()
       }
     },
-    async invoke(method, ...params): Promise<any> {
+    async invoke(method: string, ...params: readonly unknown[]): Promise<any> {
       const rpc = await get()
       return rpc.invoke(method, ...params)
     },
-    async invokeAndTransfer(method, ...params): Promise<any> {
+    async invokeAndTransfer(method: string, ...params: readonly unknown[]): Promise<any> {
       const rpc = await get()
       return rpc.invokeAndTransfer(method, ...params)
     },
-    send(method, ...params): void {
+    send(method: string, ...params: readonly unknown[]): void {
       void get().then((rpc) => rpc.send(method, ...params))
     },
   }

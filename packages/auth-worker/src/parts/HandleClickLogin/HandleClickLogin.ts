@@ -14,7 +14,7 @@ import { clearPendingOidcAuthState, savePendingOidcAuthState } from '../OidcAuth
 import { persistLoginResult } from '../PersistLoginResult/PersistLoginResult.ts'
 import { waitForElectronBackendLogin } from '../WaitForElectronBackendLogin/WaitForElectronBackendLogin.ts'
 
-let nativeLoginCount = 0
+const state = { nativeLoginCount: 0 }
 
 const getMockLoginResult = async (signingInState: LoginResult, persistResult: typeof persistLoginResult): Promise<LoginResult | undefined> => {
   if (!MockBackendAuth.hasPendingMockLoginResponse()) {
@@ -48,7 +48,7 @@ const getInteractiveLoginResult = async (
   const authUseRedirect = getAuthUseRedirect(transportPlatform)
   const uid = nativeAuth ? globalThis.crypto.randomUUID() : 0
   if (nativeAuth) {
-    nativeLoginCount++
+    state.nativeLoginCount++
   }
   try {
     const { clientId, codeVerifier, loginUrl, redirectUri, state } = await getBackendLoginRequest(backendUrl, transportPlatform, uid)
@@ -82,8 +82,8 @@ const getInteractiveLoginResult = async (
       try {
         await AuthProcess.invoke('OAuthServer.dispose', String(uid))
       } finally {
-        nativeLoginCount--
-        if (nativeLoginCount === 0) {
+        state.nativeLoginCount--
+        if (state.nativeLoginCount === 0) {
           await AuthProcess.dispose()
         }
       }
