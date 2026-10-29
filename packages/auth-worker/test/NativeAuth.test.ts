@@ -31,6 +31,7 @@ test('native web shell uses the loopback client and persists tokens without Elec
       return 'callback-code'
     },
   })
+  Object.assign(auth, { dispose: jest.fn(async () => {}) })
   using opener = OpenerWorker.registerMockRpc({
     'Open.openUrl'(href: string, platform: number, redirect: boolean): void {
       const url = new URL(href)
@@ -71,6 +72,7 @@ test('browser launch failure leaves logged-out state, disposes the listener, and
     },
     'OAuthServer.dispose'(): void {},
   })
+  Object.assign(auth, { dispose: jest.fn(async () => {}) })
   using opener = OpenerWorker.registerMockRpc({
     'Open.openUrl'(): never {
       throw new Error('No default browser is available')
@@ -101,6 +103,7 @@ test('abandoning the external browser times out and disposes the callback listen
         return new Promise(() => {})
       },
     })
+    Object.assign(auth, { dispose: jest.fn(async () => {}) })
     using opener = OpenerWorker.registerMockRpc({ 'Open.openUrl'(): void {} })
     const login = handleClickLogin({ backendUrl, platform: PlatformType.Web })
     await callback.promise
@@ -113,4 +116,66 @@ test('abandoning the external browser times out and disposes the callback listen
   } finally {
     jest.useRealTimers()
   }
+})
+
+test('one completed login retains the connection until the overlapping login finishes', async () => {
+  await configure({ platform: PlatformType.Electron })
+  using auth = AuthProcess.registerMockRpc({
+    'OAuthServer.create'(): number {
+      return 43_123
+    },
+    'OAuthServer.dispose'(): void {},
+  })
+  const dispose = jest.fn(async () => {})
+  Object.assign(auth, { dispose })
+  const entered = Promise.withResolvers<void>()
+  const first = Promise.withResolvers<void>()
+  const second = Promise.withResolvers<void>()
+  let calls = 0
+  using opener = OpenerWorker.registerMockRpc({
+    async 'Open.openUrl'(): Promise<never> {
+      const wait = calls++ === 0 ? first : second
+      if (calls === 2) {
+        entered.resolve()
+      }
+      await wait.promise
+      throw new Error('browser closed')
+    },
+  })
+  const login1 = handleClickLogin({ backendUrl, platform: PlatformType.Electron })
+  const login2 = handleClickLogin({ backendUrl, platform: PlatformType.Electron })
+  await entered.promise
+  first.resolve()
+  const completed = await Promise.race([login1, login2])
+  expect(completed.userState).toBe('loggedOut')
+  expect(dispose).not.toHaveBeenCalled()
+  second.resolve()
+  const results = await Promise.all([login1, login2])
+  expect(results.every((result) => result.userState === 'loggedOut')).toBe(true)
+  expect(dispose).toHaveBeenCalledTimes(1)
+  expect(opener.invocations.length).toBeGreaterThan(0)
+  expect(auth.invocations.filter(([method]) => method === 'OAuthServer.dispose')).toHaveLength(2)
+})
+
+test('a failed OAuth cleanup still releases the process connection', async () => {
+  await configure({ platform: PlatformType.Electron })
+  using auth = AuthProcess.registerMockRpc({
+    'OAuthServer.create'(): number {
+      return 43_123
+    },
+    'OAuthServer.dispose'(): never {
+      throw new Error('cleanup failed')
+    },
+  })
+  const dispose = jest.fn(async () => {})
+  Object.assign(auth, { dispose })
+  using opener = OpenerWorker.registerMockRpc({
+    'Open.openUrl'(): never {
+      throw new Error('browser closed')
+    },
+  })
+  const result = await handleClickLogin({ backendUrl, platform: PlatformType.Electron })
+  expect(result.userState).toBe('loggedOut')
+  expect(dispose).toHaveBeenCalledTimes(1)
+  expect(opener.invocations.length).toBeGreaterThan(0)
 })
