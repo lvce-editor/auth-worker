@@ -21,7 +21,10 @@ const state = { login: undefined as Promise<LoginResult> | undefined }
 
 const normalizeBackendUrl = (backendUrl: string): string => new URL(backendUrl).origin
 
-const getNormalizedBackendUrl = (backendUrl = getAuthBackendUrl()): string => normalizeBackendUrl(backendUrl)
+const getNormalizedBackendUrl = async (backendUrl?: string): Promise<string> => {
+  const url = await getAuthBackendUrl(backendUrl)
+  return url ? normalizeBackendUrl(url) : ''
+}
 
 const addSession = async (backendUrl: string, session: LoginResult, revision: number): Promise<void> => {
   if (session.userState !== 'loggedIn' || !session.authAccessToken) {
@@ -104,10 +107,13 @@ const getConnectionRequestHeaders = (accessToken: string): HeadersInit => {
 }
 
 export const getConnectedAccounts = async (): Promise<readonly ConnectedAccount[]> => {
-  const backendUrl = getNormalizedBackendUrl()
-  const accessToken = await getAccessToken({ refresh: 'if-needed' })
+  const backendUrl = await getNormalizedBackendUrl()
+  const accessToken = await getAccessToken({ backendUrl, refresh: 'if-needed' })
   if (!accessToken) {
     return []
+  }
+  if (backendUrl !== (await getNormalizedBackendUrl())) {
+    throw new Error('Account backend changed. Retry connected accounts.')
   }
   const response = await fetch(getConnectedAccountsUrl(backendUrl), {
     headers: getConnectionRequestHeaders(accessToken),
@@ -123,10 +129,13 @@ export const getConnectedAccounts = async (): Promise<readonly ConnectedAccount[
 }
 
 export const disconnectConnectedAccount = async (provider: string): Promise<void> => {
-  const backendUrl = getNormalizedBackendUrl()
-  const accessToken = await getAccessToken({ refresh: 'if-needed' })
+  const backendUrl = await getNormalizedBackendUrl()
+  const accessToken = await getAccessToken({ backendUrl, refresh: 'if-needed' })
   if (!accessToken) {
     throw new Error('Sign in to disconnect connected accounts.')
+  }
+  if (backendUrl !== (await getNormalizedBackendUrl())) {
+    throw new Error('Account backend changed. Retry connected accounts.')
   }
   const response = await fetch(getConnectedAccountDisconnectUrl(backendUrl, provider), {
     headers: getConnectionRequestHeaders(accessToken),
@@ -138,7 +147,7 @@ export const disconnectConnectedAccount = async (provider: string): Promise<void
 }
 
 export const getAccounts = async (): Promise<readonly AccountSummary[]> => {
-  const backendUrl = getNormalizedBackendUrl()
+  const backendUrl = await getNormalizedBackendUrl()
   const registry = await accounts.read()
   return registry.accounts
     .filter((account) => account.backendUrl === backendUrl)
@@ -151,8 +160,11 @@ export const getAccounts = async (): Promise<readonly AccountSummary[]> => {
     }))
 }
 
-export const getAccessToken = async (options: { readonly refresh?: 'if-needed' | 'always' } = {}): Promise<string> => {
-  const backendUrl = getNormalizedBackendUrl()
+export const getAccessToken = async (options: { readonly refresh?: 'if-needed' | 'always'; readonly backendUrl?: string } = {}): Promise<string> => {
+  const backendUrl = await getNormalizedBackendUrl(options.backendUrl)
+  if (!backendUrl) {
+    return ''
+  }
   const account = await getActive(backendUrl)
   if (!account) {
     return ''
@@ -183,7 +195,7 @@ export const initialize = async (options: { readonly backendUrl?: string; readon
   if (typeof options.platform === 'number') {
     setAuthPlatform(options.platform)
   }
-  const backendUrl = getNormalizedBackendUrl(options.backendUrl ?? getAuthBackendUrl())
+  const backendUrl = await getNormalizedBackendUrl(options.backendUrl)
   const registry = await accounts.read()
   const completed = await completeBrowserOidcLogin(backendUrl)
   if (completed) {
@@ -191,7 +203,7 @@ export const initialize = async (options: { readonly backendUrl?: string; readon
     return getCurrentState(backendUrl, completed.authErrorMessage)
   }
   try {
-    await getAccessToken({ refresh: 'if-needed' })
+    await getAccessToken({ backendUrl, refresh: 'if-needed' })
     return getCurrentState(backendUrl)
   } catch (error) {
     return getCurrentState(backendUrl, error instanceof Error ? error.message : 'Unable to refresh the account.')
@@ -203,7 +215,7 @@ export const login = async (options: LoginOptions): Promise<LoginResult> => {
     return state.login
   }
   const operation = (async (): Promise<LoginResult> => {
-    const backendUrl = getNormalizedBackendUrl(options.backendUrl ?? getAuthBackendUrl())
+    const backendUrl = await getNormalizedBackendUrl(options.backendUrl)
     const registry = await accounts.read()
     const result = await handleClickLogin({ ...options, selectAccount: registry.accounts.length > 0 }, async (value) => value)
     await addSession(backendUrl, result, registry.revision)
@@ -218,7 +230,7 @@ export const login = async (options: LoginOptions): Promise<LoginResult> => {
 }
 
 export const useAccount = async (id: string): Promise<LoginResult> => {
-  const backendUrl = getNormalizedBackendUrl()
+  const backendUrl = await getNormalizedBackendUrl()
   const registry = await accounts.read()
   if (registry.accounts.every((account) => !(account.id === id && account.backendUrl === backendUrl))) {
     throw new Error('Account is no longer available.')
@@ -228,7 +240,7 @@ export const useAccount = async (id: string): Promise<LoginResult> => {
 }
 
 export const removeAccount = async (id: string): Promise<LoginResult> => {
-  const backendUrl = getNormalizedBackendUrl()
+  const backendUrl = await getNormalizedBackendUrl()
   const registry = await accounts.read()
   if (registry.accounts.some((account) => account.id === id && account.backendUrl === backendUrl)) {
     await accounts.remove(id)
@@ -237,7 +249,7 @@ export const removeAccount = async (id: string): Promise<LoginResult> => {
 }
 
 export const logout = async (): Promise<LoginResult> => {
-  const backendUrl = getNormalizedBackendUrl()
+  const backendUrl = await getNormalizedBackendUrl()
   const account = await getActive(backendUrl)
   return account ? removeAccount(account.id) : getLoggedOutBackendAuthState()
 }

@@ -1,7 +1,7 @@
 import { expect, jest, test } from '@jest/globals'
 import { PlatformType } from '@lvce-editor/constants'
+import { RendererWorker } from '@lvce-editor/rpc-registry'
 import * as AccountAuth from '../src/parts/AccountAuth/AccountAuth.ts'
-import { setAuthBackendUrl } from '../src/parts/AuthBackendUrl/AuthBackendUrl.ts'
 import { setAuthPlatform } from '../src/parts/AuthPlatform/AuthPlatform.ts'
 import { clear, setNextLoginResponse } from '../src/parts/MockBackendAuth/MockBackendAuth.ts'
 import { clearPersistedAuthSession, persistAuthSession } from '../src/parts/PersistedAuthSession/PersistedAuthSession.ts'
@@ -10,7 +10,12 @@ import { clearPersistentAuthValue, getPersistentAuthValue, setPersistentAuthValu
 const backendUrl = 'https://backend.test'
 
 test('RPC session lifecycle ignores legacy sessions, adds, switches, deduplicates and preserves sessions on failed login', async () => {
-  setAuthBackendUrl(backendUrl)
+  using mockRendererWorkerRpc = RendererWorker.registerMockRpc({
+    'Layout.getBackendUrl'(): string {
+      return backendUrl
+    },
+  })
+  expect(mockRendererWorkerRpc).toBeDefined()
   setAuthPlatform(PlatformType.Web)
   await persistAuthSession({
     authAccessToken: 'access-A',
@@ -92,7 +97,12 @@ test('RPC session lifecycle ignores legacy sessions, adds, switches, deduplicate
 })
 
 test('loads and disconnects connected provider accounts using only the active bearer token', async () => {
-  setAuthBackendUrl(backendUrl)
+  using mockRendererWorkerRpc = RendererWorker.registerMockRpc({
+    'Layout.getBackendUrl'(): string {
+      return backendUrl
+    },
+  })
+  expect(mockRendererWorkerRpc).toBeDefined()
   const { setPersistentAuthValue } = await import('../src/parts/PersistentAuthValue/PersistentAuthValue.ts')
   await setPersistentAuthValue(
     'accountSessions',
@@ -133,6 +143,12 @@ test('loads and disconnects connected provider accounts using only the active be
 })
 
 test('in-flight refresh returns the selected identity and deduplicates overlapping refreshes', async () => {
+  using mockRendererWorkerRpc = RendererWorker.registerMockRpc({
+    'Layout.getBackendUrl'(): string {
+      return backendUrl
+    },
+  })
+  expect(mockRendererWorkerRpc).toBeDefined()
   const sessions = ['A', 'B'].map((id) => ({
     backendUrl,
     id: `${backendUrl}/${id}`,

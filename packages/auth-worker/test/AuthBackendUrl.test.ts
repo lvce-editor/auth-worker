@@ -1,13 +1,36 @@
-import { afterEach, expect, test } from '@jest/globals'
-import { setAuthBackendUrl } from '../src/parts/AuthBackendUrl/AuthBackendUrl.ts'
+import { expect, test } from '@jest/globals'
+import { RendererWorker } from '@lvce-editor/rpc-registry'
 import { commandMap } from '../src/parts/CommandMap/CommandMap.ts'
 
-afterEach(() => setAuthBackendUrl(''))
+test('the backend query observes successive renderer values without recursive auth calls', async () => {
+  let backendUrl = 'https://first.test'
+  using mockRendererWorkerRpc = RendererWorker.registerMockRpc({
+    'Layout.getBackendUrl'(): string {
+      return backendUrl
+    },
+  })
+  await expect(commandMap['Auth.getBackendUrl']()).resolves.toBe('https://first.test')
+  backendUrl = 'https://second.test'
+  await expect(commandMap['Auth.getBackendUrl']()).resolves.toBe('https://second.test')
+  expect(mockRendererWorkerRpc.invocations.map(([command]) => command)).toEqual(['Layout.getBackendUrl', 'Layout.getBackendUrl'])
+})
 
-test('the generic backend query follows authentication configuration, including before sign-in', () => {
-  expect(commandMap['Auth.getBackendUrl']()).toBe('')
-  setAuthBackendUrl('https://first.test')
-  expect(commandMap['Auth.getBackendUrl']()).toBe('https://first.test')
-  setAuthBackendUrl('https://second.test')
-  expect(commandMap['Auth.getBackendUrl']()).toBe('https://second.test')
+test('an empty renderer backend stays empty', async () => {
+  using mockRendererWorkerRpc = RendererWorker.registerMockRpc({
+    'Layout.getBackendUrl'(): string {
+      return ''
+    },
+  })
+  expect(mockRendererWorkerRpc).toBeDefined()
+  await expect(commandMap['Auth.getBackendUrl']()).resolves.toBe('')
+})
+
+test('renderer backend lookup failures are propagated', async () => {
+  using mockRendererWorkerRpc = RendererWorker.registerMockRpc({
+    'Layout.getBackendUrl'(): never {
+      throw new Error('renderer unavailable')
+    },
+  })
+  expect(mockRendererWorkerRpc).toBeDefined()
+  await expect(commandMap['Auth.getBackendUrl']()).rejects.toThrow('renderer unavailable')
 })

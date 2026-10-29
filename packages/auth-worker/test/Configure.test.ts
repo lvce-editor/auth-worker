@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from '@jest/globals'
 import { PlatformType } from '@lvce-editor/constants'
-import { MainProcess } from '@lvce-editor/rpc-registry'
+import { MainProcess, RendererWorker } from '@lvce-editor/rpc-registry'
 import type { RefreshOidcTokensResult } from '../src/parts/RefreshOidcTokens/RefreshOidcTokens.ts'
 import { configure } from '../src/parts/Configure/Configure.ts'
 import { getAccessToken } from '../src/parts/GetAccessToken/GetAccessToken.ts'
@@ -8,13 +8,19 @@ import { clearStoredOidcClientId, saveOidcClientId } from '../src/parts/OidcAuth
 import { clearPersistentAuthValue, getPersistentAuthValue, setPersistentAuthValue } from '../src/parts/PersistentAuthValue/PersistentAuthValue.ts'
 
 afterEach(async () => {
-  await configure({ backendUrl: '', platform: PlatformType.Web })
+  await configure({ platform: PlatformType.Web })
   await clearStoredOidcClientId()
   await clearPersistentAuthValue('accessTokenExpiresAt')
 })
 
 test('configures lazy token access to refresh an Electron secret without restoring a session', async () => {
-  await configure({ backendUrl: 'https://api.example.com', platform: PlatformType.Electron })
+  await configure({ platform: PlatformType.Electron })
+  using mockRendererWorkerRpc = RendererWorker.registerMockRpc({
+    'Layout.getBackendUrl'(): string {
+      return 'https://api.example.com'
+    },
+  })
+  expect(mockRendererWorkerRpc).toBeDefined()
   using mockMainProcessRpc = MainProcess.registerMockRpc({
     'SecretStorage.get'(_storageId: string, key: string): string {
       return key === 'accessToken' ? 'expired-secret' : 'refresh-secret'
@@ -48,7 +54,7 @@ test('uses browser storage without accessing Electron secret storage on web', as
       throw new Error('Electron secret storage should not be accessed on web.')
     },
   })
-  await configure({ backendUrl: 'https://api.example.com', platform: PlatformType.Web })
+  await configure({ platform: PlatformType.Web })
 
   await setPersistentAuthValue('accessToken', 'browser-token')
   await expect(getPersistentAuthValue('accessToken')).resolves.toBe('browser-token')

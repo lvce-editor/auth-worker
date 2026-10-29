@@ -4,12 +4,16 @@ import { getAuthBackendUrl } from '../AuthBackendUrl/AuthBackendUrl.ts'
 const identifier = /^[a-f0-9]{32}$/
 const confirmationCode = /^[A-F0-9]{8}$/
 
-export const getCloudflareConnectionsUrl = (): string => new URL('/cloudflare', getAuthBackendUrl()).href
+export const getCloudflareConnectionsUrl = async (): Promise<string> => {
+  const backendUrl = await getAuthBackendUrl()
+  return backendUrl ? new URL('/cloudflare', backendUrl).href : ''
+}
 
 const request = async (pathname: string, method = 'GET', body?: unknown): Promise<unknown> => {
-  const backendUrl = getAuthBackendUrl()
-  const accessToken = await getAccessToken({ refresh: 'if-needed' })
-  if (backendUrl !== getAuthBackendUrl()) throw new Error('Account backend changed. Retry Cloudflare setup.')
+  const backendUrl = await getAuthBackendUrl()
+  if (!backendUrl) throw new Error('Sign in to LVCE to manage Cloudflare connections.')
+  const accessToken = await getAccessToken({ backendUrl, refresh: 'if-needed' })
+  if (backendUrl !== (await getAuthBackendUrl())) throw new Error('Account backend changed. Retry Cloudflare setup.')
   if (!accessToken) throw new Error('Sign in to LVCE to manage Cloudflare connections.')
   const response = await fetch(new URL(pathname, backendUrl), {
     headers: { Accept: 'application/json', Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
