@@ -111,17 +111,7 @@ export const getPersistentAuthValue = async (key: string): Promise<string> => {
   if (!shouldUseSecretStorage(key)) {
     return getIndexedDbValue(key)
   }
-  const secret = await SecretStorage.getSecret(key)
-  if (secret) {
-    return secret
-  }
-  const legacyValue = await getIndexedDbValue(key)
-  if (!legacyValue) {
-    return ''
-  }
-  await SecretStorage.storeSecret(key, legacyValue)
-  await clearIndexedDbValue(key)
-  return legacyValue
+  return (await SecretStorage.getSecret(key)) || ''
 }
 
 export const setPersistentAuthValue = async (key: string, value: string): Promise<void> => {

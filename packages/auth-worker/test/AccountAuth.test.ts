@@ -4,12 +4,12 @@ import * as AccountAuth from '../src/parts/AccountAuth/AccountAuth.ts'
 import { setAuthBackendUrl } from '../src/parts/AuthBackendUrl/AuthBackendUrl.ts'
 import { setAuthPlatform } from '../src/parts/AuthPlatform/AuthPlatform.ts'
 import { clear, setNextLoginResponse } from '../src/parts/MockBackendAuth/MockBackendAuth.ts'
-import { persistAuthSession } from '../src/parts/PersistedAuthSession/PersistedAuthSession.ts'
-import { getPersistentAuthValue } from '../src/parts/PersistentAuthValue/PersistentAuthValue.ts'
+import { clearPersistedAuthSession, persistAuthSession } from '../src/parts/PersistedAuthSession/PersistedAuthSession.ts'
+import { clearPersistentAuthValue, getPersistentAuthValue, setPersistentAuthValue } from '../src/parts/PersistentAuthValue/PersistentAuthValue.ts'
 
 const backendUrl = 'https://backend.test'
 
-test('RPC session lifecycle migrates, adds, switches, deduplicates and preserves sessions on failed login', async () => {
+test('RPC session lifecycle ignores legacy sessions, adds, switches, deduplicates and preserves sessions on failed login', async () => {
   setAuthBackendUrl(backendUrl)
   setAuthPlatform(PlatformType.Web)
   await persistAuthSession({
@@ -19,6 +19,7 @@ test('RPC session lifecycle migrates, adds, switches, deduplicates and preserves
     authRefreshToken: 'refresh-A',
     userState: 'loggedIn',
   })
+  await clearPersistentAuthValue('accountSessions')
   const calls: string[] = []
   const fetchMock = jest.spyOn(globalThis, 'fetch').mockImplementation(async (...args: readonly unknown[]): Promise<Response> => {
     const input = args[0]
@@ -34,8 +35,32 @@ test('RPC session lifecycle migrates, adds, switches, deduplicates and preserves
     return Response.json({ access_token: 'access-A2', expires_in: 3600, refresh_token: 'refresh-A2', token_type: 'bearer' })
   })
   try {
+    expect(await AccountAuth.getAccounts()).toEqual([])
+    expect(await getPersistentAuthValue('accountSessions')).toBe('')
+    expect(await getPersistentAuthValue('accessToken')).toBe('access-A')
+    await clearPersistedAuthSession()
+    await setPersistentAuthValue(
+      'accountSessions',
+      JSON.stringify({
+        accounts: [
+          {
+            backendUrl,
+            id: `${backendUrl}/A`,
+            profile: { displayName: 'User A', email: '', id: 'A', provider: 'LVCE Editor' },
+            session: {
+              authAccessToken: 'access-A',
+              authClientId: 'client',
+              authErrorMessage: '',
+              authRefreshToken: 'refresh-A',
+              userState: 'loggedIn',
+            },
+          },
+        ],
+        activeId: `${backendUrl}/A`,
+        revision: 0,
+      }),
+    )
     expect(await AccountAuth.getAccounts()).toMatchObject([{ active: true, displayName: 'User A', id: `${backendUrl}/A` }])
-    expect(await getPersistentAuthValue('accessToken')).toBe('')
     setNextLoginResponse({ delay: 0, response: { accessToken: 'access-B', refreshToken: 'refresh-B' }, type: 'success' })
     expect(await AccountAuth.login({ backendUrl, platform: PlatformType.Web })).toMatchObject({ authAccessToken: 'access-B', userName: 'User B' })
     const list = await AccountAuth.getAccounts()
