@@ -41,9 +41,7 @@ test('electron ignores legacy tokens in indexed db', async () => {
 
   await expect(getPersistentAuthValue('refreshToken')).resolves.toBe('')
 
-  expect(mockMainProcessRpc.invocations).toEqual([
-    ['SecretStorage.get', 'lvce-editor.auth', 'refreshToken'],
-  ])
+  expect(mockMainProcessRpc.invocations).toEqual([['SecretStorage.get', 'lvce-editor.auth', 'refreshToken']])
   setAuthPlatform(PlatformType.Web)
   await expect(getPersistentAuthValue('refreshToken')).resolves.toBe('legacy-token')
 })
