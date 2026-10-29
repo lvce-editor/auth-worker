@@ -5,6 +5,7 @@ import { getPersistentAuthValue, setPersistentAuthValue } from '../PersistentAut
 import { refreshOidcTokens, type RefreshOidcTokensResult } from '../RefreshOidcTokens/RefreshOidcTokens.ts'
 
 export interface GetAccessTokenOptions {
+  readonly backendUrl?: string
   readonly refresh?: 'if-needed' | 'always'
 }
 
@@ -21,8 +22,15 @@ export const getAccessToken = async (
     return accessToken
   }
   const [clientId, refreshToken] = await Promise.all([getStoredOidcClientId(), getPersistentAuthValue('refreshToken')])
-  const backendUrl = getAuthBackendUrl()
-  if (!backendUrl || !clientId || !refreshToken) {
+  if (!clientId || !refreshToken) {
+    if (options.refresh === 'always') {
+      return ''
+    }
+    const expiresAt = Number(accessTokenExpiresAt)
+    return accessTokenExpiresAt && Number.isFinite(expiresAt) && expiresAt <= now ? '' : accessToken
+  }
+  const backendUrl = await getAuthBackendUrl(options.backendUrl)
+  if (!backendUrl) {
     if (options.refresh === 'always') {
       return ''
     }

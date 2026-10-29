@@ -1,11 +1,8 @@
-const state = {
-  backendUrl: '',
-}
+import { RendererWorker } from '@lvce-editor/rpc-registry'
 
-export const getAuthBackendUrl = (): string => {
-  return state.backendUrl
-}
-
-export const setAuthBackendUrl = (backendUrl: string): void => {
-  state.backendUrl = backendUrl
+export const getAuthBackendUrl = async (backendUrl?: string): Promise<string> => {
+  if (typeof backendUrl === 'string') {
+    return backendUrl
+  }
+  return RendererWorker.invoke('Layout.getBackendUrl')
 }
