@@ -119,7 +119,7 @@ test('abandoning the external browser times out and disposes the callback listen
 })
 
 test('one completed login retains the connection until the overlapping login finishes', async () => {
-  await configure({ backendUrl, platform: PlatformType.Electron })
+  await configure({ platform: PlatformType.Electron })
   using auth = AuthProcess.registerMockRpc({
     'OAuthServer.create'(): number {
       return 43_123
@@ -158,7 +158,7 @@ test('one completed login retains the connection until the overlapping login fin
 })
 
 test('a failed OAuth cleanup still releases the process connection', async () => {
-  await configure({ backendUrl, platform: PlatformType.Electron })
+  await configure({ platform: PlatformType.Electron })
   using auth = AuthProcess.registerMockRpc({
     'OAuthServer.create'(): number {
       return 43_123
