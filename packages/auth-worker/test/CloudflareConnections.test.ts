@@ -1,14 +1,19 @@
 import { expect, jest, test } from '@jest/globals'
-import { setAuthBackendUrl } from '../src/parts/AuthBackendUrl/AuthBackendUrl.ts'
+import { RendererWorker } from '@lvce-editor/rpc-registry'
 import {
   getCloudflareConnectionsUrl,
   approveCloudflareMachine,
   getCloudflareStatus,
 } from '../src/parts/CloudflareConnections/CloudflareConnections.ts'
 
-test('account connection page uses the configured backend origin', () => {
-  setAuthBackendUrl('https://backend.example')
-  expect(getCloudflareConnectionsUrl()).toBe('https://backend.example/cloudflare')
+test('account connection page uses the current renderer backend origin', async () => {
+  using mockRendererWorkerRpc = RendererWorker.registerMockRpc({
+    'Layout.getBackendUrl'(): string {
+      return 'https://backend.example'
+    },
+  })
+  expect(mockRendererWorkerRpc).toBeDefined()
+  await expect(getCloudflareConnectionsUrl()).resolves.toBe('https://backend.example/cloudflare')
 })
 test('invalid approvals cannot issue authenticated network requests', () => {
   const fetchMock = jest.spyOn(globalThis, 'fetch')
@@ -21,6 +26,11 @@ test('invalid approvals cannot issue authenticated network requests', () => {
   }
 })
 test('signed-out users cannot access Cloudflare management', async () => {
-  setAuthBackendUrl('https://backend.example')
+  using mockRendererWorkerRpc = RendererWorker.registerMockRpc({
+    'Layout.getBackendUrl'(): string {
+      return 'https://backend.example'
+    },
+  })
+  expect(mockRendererWorkerRpc).toBeDefined()
   await expect(getCloudflareStatus()).rejects.toThrow('Sign in to LVCE')
 })

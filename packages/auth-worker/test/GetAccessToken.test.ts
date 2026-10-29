@@ -1,11 +1,10 @@
 import { afterEach, expect, test } from '@jest/globals'
-import { setAuthBackendUrl } from '../src/parts/AuthBackendUrl/AuthBackendUrl.ts'
+import { RendererWorker } from '@lvce-editor/rpc-registry'
 import { getAccessToken } from '../src/parts/GetAccessToken/GetAccessToken.ts'
 import { clearStoredOidcClientId, saveOidcClientId } from '../src/parts/OidcAuthState/OidcAuthState.ts'
 import { clearPersistentAuthValue, getPersistentAuthValue, setPersistentAuthValue } from '../src/parts/PersistentAuthValue/PersistentAuthValue.ts'
 
 afterEach(async () => {
-  setAuthBackendUrl('')
   await Promise.all([
     clearPersistentAuthValue('accessToken'),
     clearPersistentAuthValue('accessTokenExpiresAt'),
@@ -13,6 +12,13 @@ afterEach(async () => {
     clearStoredOidcClientId(),
   ])
 })
+
+const registerBackendUrl = (backendUrl: string): ReturnType<typeof RendererWorker.registerMockRpc> =>
+  RendererWorker.registerMockRpc({
+    'Layout.getBackendUrl'(): string {
+      return backendUrl
+    },
+  })
 
 test('returns the persisted access token', async () => {
   await setPersistentAuthValue('accessToken', 'token-1')
@@ -34,7 +40,8 @@ test('returns an unexpired access token without refreshing', async () => {
 })
 
 test('refreshes and persists an expired access token', async () => {
-  setAuthBackendUrl('https://api.example.com/')
+  using mockRendererWorkerRpc = registerBackendUrl('https://api.example.com/')
+  expect(mockRendererWorkerRpc).toBeDefined()
   await Promise.all([
     setPersistentAuthValue('accessToken', 'token-1'),
     setPersistentAuthValue('accessTokenExpiresAt', '1000'),
@@ -74,7 +81,8 @@ test('returns the stored token when refresh metadata is unavailable', async () =
 })
 
 test.each(['refreshToken', 'clientId', 'backendUrl'])('does not return a known expired token when %s is missing', async (missing) => {
-  setAuthBackendUrl(missing === 'backendUrl' ? '' : 'https://api.example.com/')
+  using mockRendererWorkerRpc = registerBackendUrl(missing === 'backendUrl' ? '' : 'https://api.example.com/')
+  expect(mockRendererWorkerRpc).toBeDefined()
   await Promise.all([
     setPersistentAuthValue('accessToken', 'expired-token'),
     setPersistentAuthValue('accessTokenExpiresAt', '1000'),
@@ -90,7 +98,8 @@ test.each(['refreshToken', 'clientId', 'backendUrl'])('does not return a known e
 })
 
 test('forces refresh of a server-rejected token before its recorded expiry', async () => {
-  setAuthBackendUrl('https://api.example.com/')
+  using mockRendererWorkerRpc = registerBackendUrl('https://api.example.com/')
+  expect(mockRendererWorkerRpc).toBeDefined()
   await Promise.all([
     setPersistentAuthValue('accessToken', 'rejected-token'),
     setPersistentAuthValue('accessTokenExpiresAt', '9999999'),
@@ -110,7 +119,8 @@ test('forces refresh of a server-rejected token before its recorded expiry', asy
 })
 
 test.each(['refreshToken', 'clientId', 'backendUrl'])('does not reuse a rejected token when %s is missing', async (missing) => {
-  setAuthBackendUrl(missing === 'backendUrl' ? '' : 'https://api.example.com/')
+  using mockRendererWorkerRpc = registerBackendUrl(missing === 'backendUrl' ? '' : 'https://api.example.com/')
+  expect(mockRendererWorkerRpc).toBeDefined()
   await Promise.all([
     setPersistentAuthValue('accessToken', 'rejected-token'),
     setPersistentAuthValue('accessTokenExpiresAt', '9999999'),
@@ -129,7 +139,8 @@ test.each(['refreshToken', 'clientId', 'backendUrl'])('does not reuse a rejected
 })
 
 test('propagates rejected forced refresh without returning the rejected access token', async () => {
-  setAuthBackendUrl('https://api.example.com/')
+  using mockRendererWorkerRpc = registerBackendUrl('https://api.example.com/')
+  expect(mockRendererWorkerRpc).toBeDefined()
   await Promise.all([
     setPersistentAuthValue('accessToken', 'rejected-token'),
     setPersistentAuthValue('accessTokenExpiresAt', '9999999'),

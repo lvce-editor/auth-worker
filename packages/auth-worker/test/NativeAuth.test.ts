@@ -9,13 +9,13 @@ const backendUrl = 'https://api.example.com'
 
 afterEach(async () => {
   jest.restoreAllMocks()
-  await configure({ backendUrl: '', platform: PlatformType.Web })
+  await configure({ platform: PlatformType.Web })
   await clearPersistentAuthValue('accessToken')
   await clearPersistentAuthValue('refreshToken')
 })
 
 test('native web shell uses the loopback client and persists tokens without Electron', async () => {
-  await configure({ backendUrl, platform: PlatformType.Web, useNativeAuth: true })
+  await configure({ platform: PlatformType.Web, useNativeAuth: true })
   using main = MainProcess.registerMockRpc({})
   let sessionId = ''
   using auth = AuthProcess.registerMockRpc({
@@ -63,7 +63,7 @@ test('native web shell uses the loopback client and persists tokens without Elec
 })
 
 test('browser launch failure leaves logged-out state, disposes the listener, and permits retry', async () => {
-  await configure({ backendUrl, platform: PlatformType.Web, useNativeAuth: true })
+  await configure({ platform: PlatformType.Web, useNativeAuth: true })
   const ids: string[] = []
   using auth = AuthProcess.registerMockRpc({
     'OAuthServer.create'(id: string): number {
@@ -89,7 +89,7 @@ test('browser launch failure leaves logged-out state, disposes the listener, and
 })
 
 test('abandoning the external browser times out and disposes the callback listener', async () => {
-  await configure({ backendUrl, platform: PlatformType.Web, useNativeAuth: true })
+  await configure({ platform: PlatformType.Web, useNativeAuth: true })
   jest.useFakeTimers()
   try {
     const callback = Promise.withResolvers<void>()

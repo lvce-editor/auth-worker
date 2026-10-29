@@ -1,5 +1,6 @@
 import { PlatformType } from '@lvce-editor/constants'
 import type { LoginResult } from '../HandleClickLoginTypes/HandleClickLoginTypes.ts'
+import { getAuthBackendUrl } from '../AuthBackendUrl/AuthBackendUrl.ts'
 import { completeBrowserOidcLogin } from '../CompleteBrowserOidcLogin/CompleteBrowserOidcLogin.ts'
 import { configure } from '../Configure/Configure.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
@@ -14,11 +15,11 @@ export interface InitializeOptions {
   readonly useNativeAuth?: boolean
 }
 
-const getBackendUrl = (options: InitializeOptions | number): string => {
+const getBackendUrl = async (options: InitializeOptions | number): Promise<string> => {
   if (typeof options === 'number') {
     return ''
   }
-  return options.backendUrl || ''
+  return getAuthBackendUrl(options.backendUrl)
 }
 
 const getPlatform = (options: InitializeOptions | number): number => {
@@ -26,8 +27,8 @@ const getPlatform = (options: InitializeOptions | number): number => {
 }
 
 export const initialize = async (options: InitializeOptions | number): Promise<LoginResult> => {
-  const backendUrl = getBackendUrl(options)
-  await configure({ backendUrl, platform: getPlatform(options), useNativeAuth: typeof options === 'object' && options.useNativeAuth === true })
+  const backendUrl = await getBackendUrl(options)
+  await configure({ platform: getPlatform(options), useNativeAuth: typeof options === 'object' && options.useNativeAuth === true })
   try {
     if (backendUrl) {
       const completedBrowserLogin = await completeBrowserOidcLogin(backendUrl)
