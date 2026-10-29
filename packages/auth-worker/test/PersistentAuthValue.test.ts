@@ -30,7 +30,7 @@ test('electron stores, reads, and deletes tokens with secret storage', async () 
   ])
 })
 
-test('electron migrates legacy tokens from indexed db to secret storage', async () => {
+test('electron ignores legacy tokens in indexed db', async () => {
   setAuthPlatform(PlatformType.Web)
   await setPersistentAuthValue('refreshToken', 'legacy-token')
   setAuthPlatform(PlatformType.Electron)
@@ -39,14 +39,24 @@ test('electron migrates legacy tokens from indexed db to secret storage', async 
     'SecretStorage.store'() {},
   })
 
-  await expect(getPersistentAuthValue('refreshToken')).resolves.toBe('legacy-token')
+  await expect(getPersistentAuthValue('refreshToken')).resolves.toBe('')
 
   expect(mockMainProcessRpc.invocations).toEqual([
     ['SecretStorage.get', 'lvce-editor.auth', 'refreshToken'],
-    ['SecretStorage.store', 'lvce-editor.auth', 'refreshToken', 'legacy-token'],
   ])
   setAuthPlatform(PlatformType.Web)
-  await expect(getPersistentAuthValue('refreshToken')).resolves.toBe('')
+  await expect(getPersistentAuthValue('refreshToken')).resolves.toBe('legacy-token')
+})
+
+test('electron without a stored secret has no persisted auth value', async () => {
+  setAuthPlatform(PlatformType.Electron)
+  using mockMainProcessRpc = MainProcess.registerMockRpc({
+    'SecretStorage.get'() {},
+  })
+
+  await expect(getPersistentAuthValue('accessToken')).resolves.toBe('')
+
+  expect(mockMainProcessRpc.invocations).toEqual([['SecretStorage.get', 'lvce-editor.auth', 'accessToken']])
 })
 
 test('electron keeps non-secret auth values in indexed db', async () => {

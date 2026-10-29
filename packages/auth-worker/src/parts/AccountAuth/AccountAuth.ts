@@ -8,7 +8,6 @@ import { completeBrowserOidcLogin } from '../CompleteBrowserOidcLogin/CompleteBr
 import { getAccountProfile } from '../GetAccountProfile/GetAccountProfile.ts'
 import { getLoggedOutBackendAuthState } from '../GetLoggedOutBackendAuthState/GetLoggedOutBackendAuthState.ts'
 import { handleClickLogin } from '../HandleClickLogin/HandleClickLogin.ts'
-import { clearPersistedAuthSession, getPersistedAuthSession } from '../PersistedAuthSession/PersistedAuthSession.ts'
 import { getPersistentAuthValue, setPersistentAuthValue } from '../PersistentAuthValue/PersistentAuthValue.ts'
 import { refreshOidcTokens } from '../RefreshOidcTokens/RefreshOidcTokens.ts'
 
@@ -18,9 +17,11 @@ const accounts = createAccountSessions({
   write: (value) => setPersistentAuthValue(storageKey, value),
 })
 const refreshes = new Map<string, Promise<void>>()
-const state = { login: undefined as Promise<LoginResult> | undefined, migration: undefined as Promise<void> | undefined }
+const state = { login: undefined as Promise<LoginResult> | undefined }
 
 const normalizeBackendUrl = (backendUrl: string): string => new URL(backendUrl).origin
+
+const getNormalizedBackendUrl = (backendUrl = getAuthBackendUrl()): string => normalizeBackendUrl(backendUrl)
 
 const addSession = async (backendUrl: string, session: LoginResult, revision: number): Promise<void> => {
   if (session.userState !== 'loggedIn' || !session.authAccessToken) {
@@ -28,52 +29,6 @@ const addSession = async (backendUrl: string, session: LoginResult, revision: nu
   }
   const profile = await getAccountProfile(backendUrl, session.authAccessToken)
   await accounts.add({ backendUrl, id: `${backendUrl}/${profile.id}`, profile, session: { ...session, userName: profile.displayName } }, revision)
-}
-
-const migrate = async (backendUrl: string): Promise<void> => {
-  if (await getPersistentAuthValue(storageKey)) {
-    return
-  }
-  const legacy = await getPersistedAuthSession()
-  if (legacy) {
-    if (legacy.authClientId && legacy.authRefreshToken) {
-      const tokens = await refreshOidcTokens(backendUrl, legacy.authClientId, legacy.authRefreshToken)
-      const authAccessTokenExpiresAt = getAccessTokenExpiresAt(tokens.expiresIn)
-      const { authAccessTokenExpiresAt: _legacyExpiry, ...legacySession } = legacy
-      await addSession(
-        backendUrl,
-        {
-          ...legacySession,
-          authAccessToken: tokens.accessToken,
-          ...(authAccessTokenExpiresAt && { authAccessTokenExpiresAt }),
-          authRefreshToken: tokens.refreshToken,
-        },
-        0,
-      )
-    } else {
-      await addSession(backendUrl, legacy, 0)
-    }
-  } else {
-    await setPersistentAuthValue(storageKey, JSON.stringify({ accounts: [], activeId: '', revision: 0 }))
-  }
-  // Clear legacy credentials only after the registry is durably committed.
-  await clearPersistedAuthSession()
-}
-
-const ensureMigrated = async (backendUrl = getAuthBackendUrl()): Promise<string> => {
-  const url = normalizeBackendUrl(backendUrl)
-  if (!state.migration) {
-    state.migration = (async (): Promise<void> => {
-      try {
-        await migrate(url)
-      } catch (error) {
-        state.migration = undefined
-        throw error
-      }
-    })()
-  }
-  await state.migration
-  return url
 }
 
 const getActive = async (backendUrl: string): Promise<AccountSession | undefined> => {
@@ -149,7 +104,7 @@ const getConnectionRequestHeaders = (accessToken: string): HeadersInit => {
 }
 
 export const getConnectedAccounts = async (): Promise<readonly ConnectedAccount[]> => {
-  const backendUrl = await ensureMigrated()
+  const backendUrl = getNormalizedBackendUrl()
   const accessToken = await getAccessToken({ refresh: 'if-needed' })
   if (!accessToken) {
     return []
@@ -168,7 +123,7 @@ export const getConnectedAccounts = async (): Promise<readonly ConnectedAccount[
 }
 
 export const disconnectConnectedAccount = async (provider: string): Promise<void> => {
-  const backendUrl = await ensureMigrated()
+  const backendUrl = getNormalizedBackendUrl()
   const accessToken = await getAccessToken({ refresh: 'if-needed' })
   if (!accessToken) {
     throw new Error('Sign in to disconnect connected accounts.')
@@ -183,7 +138,7 @@ export const disconnectConnectedAccount = async (provider: string): Promise<void
 }
 
 export const getAccounts = async (): Promise<readonly AccountSummary[]> => {
-  const backendUrl = await ensureMigrated()
+  const backendUrl = getNormalizedBackendUrl()
   const registry = await accounts.read()
   return registry.accounts
     .filter((account) => account.backendUrl === backendUrl)
@@ -197,7 +152,7 @@ export const getAccounts = async (): Promise<readonly AccountSummary[]> => {
 }
 
 export const getAccessToken = async (options: { readonly refresh?: 'if-needed' | 'always' } = {}): Promise<string> => {
-  const backendUrl = await ensureMigrated()
+  const backendUrl = getNormalizedBackendUrl()
   const account = await getActive(backendUrl)
   if (!account) {
     return ''
@@ -228,7 +183,7 @@ export const initialize = async (options: { readonly backendUrl?: string; readon
   if (typeof options.platform === 'number') {
     setAuthPlatform(options.platform)
   }
-  const backendUrl = await ensureMigrated(options.backendUrl)
+  const backendUrl = getNormalizedBackendUrl(options.backendUrl ?? getAuthBackendUrl())
   const registry = await accounts.read()
   const completed = await completeBrowserOidcLogin(backendUrl)
   if (completed) {
@@ -248,7 +203,7 @@ export const login = async (options: LoginOptions): Promise<LoginResult> => {
     return state.login
   }
   const operation = (async (): Promise<LoginResult> => {
-    const backendUrl = await ensureMigrated(options.backendUrl)
+    const backendUrl = getNormalizedBackendUrl(options.backendUrl ?? getAuthBackendUrl())
     const registry = await accounts.read()
     const result = await handleClickLogin({ ...options, selectAccount: registry.accounts.length > 0 }, async (value) => value)
     await addSession(backendUrl, result, registry.revision)
@@ -263,7 +218,7 @@ export const login = async (options: LoginOptions): Promise<LoginResult> => {
 }
 
 export const useAccount = async (id: string): Promise<LoginResult> => {
-  const backendUrl = await ensureMigrated()
+  const backendUrl = getNormalizedBackendUrl()
   const registry = await accounts.read()
   if (registry.accounts.every((account) => !(account.id === id && account.backendUrl === backendUrl))) {
     throw new Error('Account is no longer available.')
@@ -273,7 +228,7 @@ export const useAccount = async (id: string): Promise<LoginResult> => {
 }
 
 export const removeAccount = async (id: string): Promise<LoginResult> => {
-  const backendUrl = await ensureMigrated()
+  const backendUrl = getNormalizedBackendUrl()
   const registry = await accounts.read()
   if (registry.accounts.some((account) => account.id === id && account.backendUrl === backendUrl)) {
     await accounts.remove(id)
@@ -282,7 +237,7 @@ export const removeAccount = async (id: string): Promise<LoginResult> => {
 }
 
 export const logout = async (): Promise<LoginResult> => {
-  const backendUrl = await ensureMigrated()
+  const backendUrl = getNormalizedBackendUrl()
   const account = await getActive(backendUrl)
   return account ? removeAccount(account.id) : getLoggedOutBackendAuthState()
 }
