@@ -13,7 +13,7 @@ process.env.PATH_PREFIX = '/auth-worker'
 const { commitHash } = await sharedProcess.exportStatic({
   root,
   extensionPath: '',
-  testPath: 'packages/e2e',
+  testPath: '',
 })
 
 const rendererWorkerPath = join(root, 'dist', commitHash, 'packages', 'renderer-worker', 'dist', 'rendererWorkerMain.js')
