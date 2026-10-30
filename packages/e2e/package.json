@@ -5,11 +5,16 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "e2e": "node ../../node_modules/@lvce-editor/test-with-playwright/bin/test-with-playwright.js  --only-extension=. --test-path=.",
-    "e2e:headless": "node ../../node_modules/@lvce-editor/test-with-playwright/bin/test-with-playwright.js  --only-extension=. --test-path=. --headless",
+    "e2e": "node --test test/*.test.ts",
+    "e2e:headless": "node --test test/*.test.ts",
     "type-check": "tsc"
   },
   "devDependencies": {
-    "@lvce-editor/test-with-playwright": "^22.40.0"
+    "@lvce-editor/auth-process": "^1.18.0",
+    "@lvce-editor/constants": "^5.30.0",
+    "@lvce-editor/rpc": "^6.21.1",
+    "@types/node": "^26.1.2",
+    "esbuild": "^0.28.2",
+    "playwright": "1.63.0"
   }
 }
