@@ -4,13 +4,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "postinstall": "node src/postinstall.js",
-    "dev": "node ../../node_modules/@lvce-editor/server/bin/server.js --test-path=../e2e"
+    "dev": "node ../../node_modules/@lvce-editor/server/bin/server.js --test-path=../e2e --auth-worker-path=../auth-worker/dist/authWorkerMain.js"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@lvce-editor/server": "0.121.6"
+    "@lvce-editor/server": "0.127.0"
   }
 }
