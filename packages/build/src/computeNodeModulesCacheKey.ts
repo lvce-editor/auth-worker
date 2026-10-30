@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { root } from './root.ts'
 
-const locations = ['.nvmrc', 'package.json', 'package-lock.json', 'packages/server/src/postinstall.js']
+const locations = ['.nvmrc', 'package.json', 'package-lock.json']
 
 const getAbsolutePath = (relativePath: string) => {
   return join(root, relativePath)
