@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "project": ["*.js"]
+    },
+    "packages/build": {
+      "project": ["src/**/*.js", "src/**/*.ts"]
+    },
+    "packages/e2e": {
+      "entry": ["test/**/*.ts"],
+      "project": ["test/**/*.ts"]
+    },
+    "packages/auth-worker": {
+      "entry": ["src/authWorkerMain.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
+    },
+    "packages/server": {
+      "project": ["*.js"]
+    }
+  }
+}
