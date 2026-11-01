@@ -13,7 +13,7 @@
     "dev": "node packages/build/src/dev.ts",
     "e2e": "cd packages/e2e && npm run e2e",
     "format": "prettier --write .",
-    "lint": "eslint . && prettier --check .",
+    "lint": "eslint . && prettier --check . && knip --no-config-hints",
     "measure": "cd packages/build && npm run measure",
     "test": "npm test --workspaces --if-present",
     "type-check": "tsc -b"
@@ -26,6 +26,7 @@
   "devDependencies": {
     "@lvce-editor/eslint-config": "^18.14.2",
     "eslint": "10.12.0",
+    "knip": "^6.41.0",
     "prettier": "^3.9.9",
     "typescript": "^6.0.3"
   }

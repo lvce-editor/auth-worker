@@ -15,7 +15,7 @@ export interface AccountSession {
   readonly session: LoginResult
 }
 
-export interface AccountRegistry {
+interface AccountRegistry {
   readonly accounts: readonly AccountSession[]
   readonly activeId: string
   readonly revision: number
