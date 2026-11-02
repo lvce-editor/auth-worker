@@ -30,7 +30,7 @@ import {
   setNextRefreshResponse,
 } from '../MockBackendAuth/MockBackendAuth.ts'
 
-export const commandMap = {
+export const commandMap: Readonly<Record<string, unknown>> = {
   'Auth.approveCloudflareMachine': approveCloudflareMachine,
   'Auth.clearMocks': clear,
   'Auth.configure': configure,
