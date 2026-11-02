@@ -1,29 +1,32 @@
 import { PlatformType } from '@lvce-editor/constants'
-import { RendererWorker } from '@lvce-editor/rpc-registry'
 import { setAuthPlatform, setUseNativeAuth } from '../AuthPlatform/AuthPlatform.ts'
+import { processInitializers } from '../ProcessInitializers/ProcessInitializers.ts'
 
 export interface ConfigureOptions {
   readonly platform: number
   readonly useNativeAuth?: boolean
 }
 
-interface ProcessInitializers {
+export interface InitializerFunctions {
   readonly initializeAuthProcess: () => Promise<void>
   readonly initializeMainProcess: () => Promise<void>
 }
 
-export const configure = async (options: ConfigureOptions, rendererWorker?: Readonly<ProcessInitializers>): Promise<void> => {
-  const processInitializers =
-    rendererWorker ??
-    ({
-      initializeAuthProcess: RendererWorker.initializeAuthProcess,
-      initializeMainProcess: RendererWorker.initializeMainProcess,
-    } satisfies ProcessInitializers)
+export const getProcessInitializers = (
+  options: ConfigureOptions,
+  initializers: Readonly<InitializerFunctions> = processInitializers,
+): ReadonlyArray<() => Promise<void>> => {
+  if (options.platform === PlatformType.Electron) {
+    return [initializers.initializeAuthProcess, initializers.initializeMainProcess]
+  }
+  if (options.useNativeAuth) {
+    return [initializers.initializeAuthProcess]
+  }
+  return []
+}
+
+export const configure = async (options: ConfigureOptions): Promise<void> => {
   setAuthPlatform(options.platform)
   setUseNativeAuth(options.useNativeAuth === true)
-  if (options.platform === PlatformType.Electron) {
-    await Promise.all([processInitializers.initializeAuthProcess(), processInitializers.initializeMainProcess()])
-  } else if (options.useNativeAuth) {
-    await processInitializers.initializeAuthProcess()
-  }
+  await Promise.all(getProcessInitializers(options).map((initialize) => initialize()))
 }
